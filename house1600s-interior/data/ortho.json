@@ -1,0 +1,14 @@
+{
+ "min_x": -13.65397,
+ "min_y": -15.432717,
+ "max_x": 6.691205,
+ "max_y": 8.447734,
+ "px_per_m": 70.0,
+ "width": 1425,
+ "height": 1672,
+ "z_floor": 1.7,
+ "z_cut": 3.65,
+ "storey": 0,
+ "z_ground": 1.9,
+ "z_ceiling": 3.9
+}

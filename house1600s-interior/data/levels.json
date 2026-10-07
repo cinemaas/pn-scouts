@@ -1,0 +1,308 @@
+[
+ {
+  "kind": "curved / winder",
+  "area_m2": 4.74,
+  "rise_m": 1.9,
+  "riser_m": 0.15,
+  "treads": 13,
+  "direction_concentration": 0.12,
+  "centre": [
+   -2.01,
+   -7.0
+  ],
+  "bbox": [
+   -2.97,
+   -9.07,
+   -0.69,
+   -4.99
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 3.6,
+  "rise_m": 1.9,
+  "riser_m": 0.15,
+  "treads": 13,
+  "direction_concentration": 0.11,
+  "centre": [
+   1.0,
+   -10.3
+  ],
+  "bbox": [
+   -0.81,
+   -11.11,
+   2.31,
+   -9.31
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 2.82,
+  "rise_m": 1.85,
+  "riser_m": 0.15,
+  "treads": 12,
+  "direction_concentration": 0.04,
+  "centre": [
+   -3.36,
+   1.8
+  ],
+  "bbox": [
+   -4.65,
+   0.77,
+   -2.13,
+   2.81
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 2.64,
+  "rise_m": 1.65,
+  "riser_m": null,
+  "treads": null,
+  "direction_concentration": 0.14,
+  "centre": [
+   -4.0,
+   -4.73
+  ],
+  "bbox": [
+   -5.37,
+   -5.59,
+   -2.85,
+   -3.79
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 2.56,
+  "rise_m": 0.6,
+  "riser_m": 0.2,
+  "treads": 3,
+  "direction_concentration": 0.11,
+  "centre": [
+   -6.88,
+   2.53
+  ],
+  "bbox": [
+   -8.25,
+   1.97,
+   -5.37,
+   3.17
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 2.55,
+  "rise_m": 1.8,
+  "riser_m": 0.15,
+  "treads": 12,
+  "direction_concentration": 0.04,
+  "centre": [
+   -12.48,
+   0.34
+  ],
+  "bbox": [
+   -13.29,
+   -1.15,
+   -11.37,
+   2.57
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.79,
+  "rise_m": 1.75,
+  "riser_m": 0.15,
+  "treads": 12,
+  "direction_concentration": 0.16,
+  "centre": [
+   -0.09,
+   3.92
+  ],
+  "bbox": [
+   -2.49,
+   3.17,
+   1.95,
+   4.49
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.66,
+  "rise_m": 1.85,
+  "riser_m": 0.175,
+  "treads": 11,
+  "direction_concentration": 0.07,
+  "centre": [
+   -9.58,
+   -0.05
+  ],
+  "bbox": [
+   -10.29,
+   -1.51,
+   -8.61,
+   2.21
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.64,
+  "rise_m": 1.9,
+  "riser_m": null,
+  "treads": null,
+  "direction_concentration": 0.1,
+  "centre": [
+   -7.04,
+   4.39
+  ],
+  "bbox": [
+   -8.49,
+   3.65,
+   -5.37,
+   5.09
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.6,
+  "rise_m": 1.65,
+  "riser_m": 0.2,
+  "treads": 8,
+  "direction_concentration": 0.15,
+  "centre": [
+   1.57,
+   1.34
+  ],
+  "bbox": [
+   0.75,
+   -0.31,
+   2.43,
+   2.45
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.27,
+  "rise_m": 1.85,
+  "riser_m": 0.15,
+  "treads": 12,
+  "direction_concentration": 0.12,
+  "centre": [
+   -2.09,
+   -10.95
+  ],
+  "bbox": [
+   -2.73,
+   -12.07,
+   -0.81,
+   -8.95
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.17,
+  "rise_m": 1.75,
+  "riser_m": null,
+  "treads": null,
+  "direction_concentration": 0.02,
+  "centre": [
+   -5.21,
+   -1.46
+  ],
+  "bbox": [
+   -6.33,
+   -1.87,
+   -4.41,
+   -0.67
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 1.11,
+  "rise_m": 1.85,
+  "riser_m": 0.2,
+  "treads": 9,
+  "direction_concentration": 0.17,
+  "centre": [
+   -7.58,
+   -3.23
+  ],
+  "bbox": [
+   -8.13,
+   -4.15,
+   -7.05,
+   -2.11
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 0.95,
+  "rise_m": 1.75,
+  "riser_m": null,
+  "treads": null,
+  "direction_concentration": 0.16,
+  "centre": [
+   -9.29,
+   3.42
+  ],
+  "bbox": [
+   -9.93,
+   2.81,
+   -8.49,
+   4.49
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 0.94,
+  "rise_m": 1.9,
+  "riser_m": 0.175,
+  "treads": 11,
+  "direction_concentration": 0.04,
+  "centre": [
+   0.14,
+   -3.62
+  ],
+  "bbox": [
+   -0.69,
+   -4.39,
+   0.75,
+   -2.71
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 0.92,
+  "rise_m": 1.75,
+  "riser_m": null,
+  "treads": null,
+  "direction_concentration": 0.03,
+  "centre": [
+   1.41,
+   -3.13
+  ],
+  "bbox": [
+   0.87,
+   -4.39,
+   2.19,
+   -2.23
+  ]
+ },
+ {
+  "kind": "curved / winder",
+  "area_m2": 0.89,
+  "rise_m": 1.6,
+  "riser_m": null,
+  "treads": null,
+  "direction_concentration": 0.17,
+  "centre": [
+   2.28,
+   -8.31
+  ],
+  "bbox": [
+   1.95,
+   -9.43,
+   2.67,
+   -7.27
+  ]
+ }
+]

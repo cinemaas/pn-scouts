@@ -1,0 +1,115 @@
+=== ingest: Eustis_Ext ===
+  export  C:\Cinematography\Scans\Eustis_Ext_122231_slow_2026-08-26
+  output  C:\Cinematography\Scouts\Eustis_Ext
+
+  manifest    Eustis_Ext_122231_slow.lcc2
+  fileType    quality
+  splats      19,669,152 total, 6 LOD levels, level0 10,062,720
+  build       quality 3, 04:26:56, walk 0.43 m/s, raw 5.0 GB
+
+  storeys     1  (wall_seg + splat union (analysis covers 22% of the sheet))
+     0: floor +0.00  ceiling +4.00  height 4.00 m
+
+--- storey 0: colour ortho plate ---
+  tiles      38
+  storey     0 of 1   (wall_seg + splat union (analysis covers 22% of the sheet))
+  extent     x -96.67..59.23  y -97.79..50.37 m
+  cut        z -0.20 .. 3.75 m  (ground 0.00, ceiling 4.00)
+  raster     12473 x 11853 px at 80 px/m
+     lod 0: 0 splats
+     lod 1: 155,405 splats
+     lod 2: 311,960 splats
+     lod 3: 623,653 splats
+     lod 4: 1,241,302 splats
+     lod 5: 2,454,520 splats
+     lod 6: 4,873,559 splats
+  painted    9,660,399 splats, 2.2% pixel coverage
+  denoised   dropped 0.4% of painted pixels as floaters
+  filled     5.1% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_ortho.png
+  wrote      Eustis_Ext_ortho.json  (georeference)
+
+--- storey 0: stairs ---
+  grid       624 x 593 cells at 25 cm, 11% populated
+  stairs     2 confirmed, 11 weak candidate(s)
+  CONFIRMED spiral at (3.33, -12.09)  r=0.973
+             climbs 4.57 m over 345 deg, 4.41 m per turn, 24.5 treads/turn
+             0.80 m wide, going 0.33 m at the walk line, ascends counter-clockwise
+  CONFIRMED spiral at (-13.97, -52.79)  r=0.973
+             climbs 4.72 m over 330 deg, 5.56 m per turn, 30.9 treads/turn
+             0.80 m wide, going 0.26 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-3.77, -47.89)  r=0.949
+             climbs 4.50 m over 330 deg, 4.39 m per turn, 24.4 treads/turn
+             0.80 m wide, going 0.33 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-9.37, -43.89)  r=0.946
+             climbs 4.54 m over 330 deg, 5.53 m per turn, 30.7 treads/turn
+             0.80 m wide, going 0.27 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-13.17, -9.29)  r=0.940
+             rise continues past the treads -- likely a vaulted ceiling, not a stair
+             climbs 3.29 m over 345 deg, 4.29 m per turn, 23.9 treads/turn
+             0.80 m wide, going 0.34 m at the walk line, ascends counter-clockwise
+  weak      spiral at (15.53, -59.69)  r=0.938
+             climbs 5.71 m over 345 deg, 6.89 m per turn, 38.3 treads/turn
+             0.80 m wide, going 0.21 m at the walk line, ascends counter-clockwise
+  weak      spiral at (11.43, 4.41)  r=0.937
+             climbs 4.51 m over 345 deg, 4.95 m per turn, 27.5 treads/turn
+             0.80 m wide, going 0.30 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-19.47, -37.19)  r=0.918
+             climbs 4.33 m over 330 deg, 5.80 m per turn, 32.2 treads/turn
+             0.80 m wide, going 0.25 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-15.07, -45.59)  r=0.916
+             climbs 4.78 m over 315 deg, 6.48 m per turn, 36.0 treads/turn
+             0.80 m wide, going 0.23 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-11.77, -51.49)  r=0.915
+             climbs 5.61 m over 285 deg, 7.04 m per turn, 39.1 treads/turn
+             0.80 m wide, going 0.21 m at the walk line, ascends counter-clockwise
+  weak      spiral at (21.03, -56.59)  r=0.906
+             climbs 5.24 m over 345 deg, 6.50 m per turn, 36.1 treads/turn
+             0.80 m wide, going 0.23 m at the walk line, ascends counter-clockwise
+  weak      spiral at (13.53, -39.09)  r=0.904
+             climbs 4.90 m over 345 deg, 5.30 m per turn, 29.4 treads/turn
+             0.80 m wide, going 0.28 m at the walk line, ascends counter-clockwise
+  weak      spiral at (12.33, -51.89)  r=0.902
+             climbs 4.82 m over 345 deg, 5.79 m per turn, 32.2 treads/turn
+             0.80 m wide, going 0.25 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- walking surface ---
+  grid       493 x 717 cells at 12 cm
+  scanned    46.6% of cells have a floor
+  regions    52 patches where the surface sits above the floor plane
+             (not classified -- stairs are stairs.py's job)
+  wrote      C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_levels.png (+ .json, _height.npy)
+
+--- drafted plan ---
+  grid dirs      86.0 deg, 176.0 deg
+  walls          102 segments -> 86 consolidated
+  openings       0 doors with swings, 4 windows
+  sheet          155.9 x 148.2 m at 80 px/m
+  wrote          C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_drawn.png   (composite)
+  wrote          C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_drawn_plate.png   (plate only, undimmed)
+  wrote          C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_drawn_lines.png   (linework only, transparent)
+  wrote          C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_drawn.svg  (vector linework over embedded plate)
+C:\Users\cinem\AppData\Local\Programs\Python\Python311\Lib\site-packages\PIL\Image.py:3578: DecompressionBombWarning: Image size (147842469 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
+  warnings.warn(
+
+--- linework only (CAD) ---
+  walls          102
+  openings drawn 5 placements from 4 detected
+  sheet          53.13 x 66.13 m, SVG in real millimetres
+  wrote          C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_plan.svg
+
+--- white-box proxy ---
+  walls          102 of 102 lines
+  openings cut   5 placements from 4 detected
+  floor/ceiling  0.150 .. 4.042 m  (height 3.89 m)
+  mesh           472 verts, 236 triangles
+  wrote          C:\Cinematography\Scouts\Eustis_Ext\Eustis_Ext_whitebox.obj
+
+=== ingest clean ===
+
+Next:
+  python tools/ue_splat.py "C:\Cinematography\Scans\Eustis_Ext_122231_slow_2026-08-26\lcc2-result\Eustis_Ext_122231_slow.lcc2"
+  import Eustis_Ext_whitebox.obj, place as ALCC2ProxyMesh at uniform scale 100
+  print Eustis_Ext_drawn.png for the grip/lighting plot

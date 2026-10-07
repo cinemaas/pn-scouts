@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stevens Estate - measurement data</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+  :root { color-scheme: dark; --bg:#0e0f12; --panel:#15171c; --line:#22252d; --fg:#eceef2;
+          --dim:#8b90a0; --acc:#4d7cfe;
+          --sans:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+          --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:400 15px/1.55 var(--sans); }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }
+  a { color: var(--acc); }
+  h1 { margin:0; font:600 27px/1.08 var(--sans); letter-spacing:.08em; text-transform:uppercase; }
+  h1 small { display:block; font:500 11px/1.4 var(--mono); letter-spacing:.14em; color:var(--dim);
+             text-transform:uppercase; margin-top:7px; }
+  .frame { margin:22px 0; padding:16px 18px; background:var(--panel); border:1px solid var(--line);
+           border-left:3px solid var(--acc); border-radius:6px; }
+  .frame b { font-weight:500; }
+  .frame dl { margin:12px 0 0; display:grid; grid-template-columns:auto 1fr; column-gap:16px; row-gap:4px;
+              font:400 12px/1.5 var(--mono); font-variant-numeric:tabular-nums; }
+  .frame dt { color:var(--dim); text-transform:uppercase; letter-spacing:.07em; }
+  .frame dd { margin:0; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font:500 10.5px/1 var(--mono); color:var(--dim); text-transform:uppercase; letter-spacing:.1em; }
+  td { font-size:13.5px; }
+  td:first-child { font:500 12.5px/1.5 var(--mono); white-space:nowrap; }
+  td:last-child { font:400 12px/1.5 var(--mono); color:var(--dim); text-align:right; white-space:nowrap;
+                  font-variant-numeric:tabular-nums; }
+  .back { display:inline-block; margin-top:26px; font:500 12px/1 var(--mono); }
+  @media (max-width:620px){ td:last-child{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Stevens Estate<small>Measurement data &middot; survey outputs</small></h1>
+
+  <div class="frame">
+    <b>Everything here is metres, Z up.</b> The origin is where the operator stood when the capture
+    started &mdash; not a building corner, not a geographic datum. Nothing is georeferenced.
+    Start with <a href="measurements.json">measurements.json</a>, which describes every file below.
+    <dl>
+      <dt>Storeys</dt><dd>floor 0 at -0.90 m, floor 1 at +2.20 m</dd>
+      <dt>Extent</dt><dd>37.8 &times; 31.4 m</dd>
+    </dl>
+  </div>
+
+  <table>
+    <thead><tr><th>File</th><th>What it is</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td><a href="drawn.svg">drawn.svg</a></td><td>The same linework over the colour ortho plate.</td><td>1590 KB</td></tr>
+      <tr><td><a href="ingest_report.txt">ingest_report.txt</a></td><td>Everything the ingest measured, in full.</td><td>6 KB</td></tr>
+      <tr><td><a href="levels.json">levels.json</a></td><td>Walking-surface height map and storey model.</td><td>6 KB</td></tr>
+      <tr><td><a href="mesh.ply">mesh.ply</a></td><td>Reconstructed mesh from LCC Studio, metres, Z up.</td><td>4097 KB</td></tr>
+      <tr><td><a href="ortho.json">ortho.json</a></td><td>Georeference for ortho.png: world extent and pixels per metre.</td><td>0 KB</td></tr>
+      <tr><td><a href="ortho.png">ortho.png</a></td><td>Georeferenced top-down colour plate.</td><td>4770 KB</td></tr>
+      <tr><td><a href="plan.svg">plan.svg</a></td><td>Drafted wall linework. SVG user units are real millimetres.</td><td>17 KB</td></tr>
+      <tr><td><a href="points.ply">points.ply</a></td><td>Decimated splat centres with colour, metres, Z up. ~200k points.</td><td>10938 KB</td></tr>
+      <tr><td><a href="stairs_L0.json">stairs_L0.json</a></td><td>Detected stair geometry: rise, going, width, direction.</td><td>1 KB</td></tr>
+      <tr><td><a href="stairs_L1.json">stairs_L1.json</a></td><td>Detected stair geometry: rise, going, width, direction.</td><td>2 KB</td></tr>
+      <tr><td><a href="walls/line_candidate_list.json">walls/line_candidate_list.json</a></td><td>Candidate wall segments before consolidation.</td><td>159 KB</td></tr>
+      <tr><td><a href="walls/line_limit_z.json">walls/line_limit_z.json</a></td><td>Floor and ceiling heights (z_ground, z_ceiling), metres.</td><td>0 KB</td></tr>
+      <tr><td><a href="walls/line_result_list.json">walls/line_result_list.json</a></td><td>Wall segments, 2D in the X/Y plane.</td><td>70 KB</td></tr>
+      <tr><td><a href="walls/main_dirs.json">walls/main_dirs.json</a></td><td>Dominant wall directions, degrees.</td><td>0 KB</td></tr>
+      <tr><td><a href="walls/poses.csv">walls/poses.csv</a></td><td>Capture trajectory: timestamp, position (m), orientation quaternion.</td><td>953 KB</td></tr>
+      <tr><td><a href="walls/render_param.json">walls/render_param.json</a></td><td>Sheet extent and scale used for the plan.</td><td>0 KB</td></tr>
+      <tr><td><a href="walls/run_summary.json">walls/run_summary.json</a></td><td>Space-recognition run summary.</td><td>0 KB</td></tr>
+      <tr><td><a href="walls/window_door_candidate_list.json">walls/window_door_candidate_list.json</a></td><td>Door and window openings along the walls.</td><td>4 KB</td></tr>
+      <tr><td><a href="whitebox.obj">whitebox.obj</a></td><td>Wall/floor/ceiling proxy solid, metres, Z up. Openings cut.</td><td>27 KB</td></tr>
+    </tbody>
+  </table>
+
+  <p class="frame" style="border-left-color:var(--line)">Walls are 2D segments in
+    <code>walls/line_result_list.json</code>. Extrude them between <code>z_ground</code> and
+    <code>z_ceiling</code> from <code>walls/line_limit_z.json</code>, then cut the openings in
+    <code>walls/window_door_candidate_list.json</code>. For a blueprint directly,
+    <a href="plan.svg">plan.svg</a> is already drafted linework in real millimetres.</p>
+
+  <a class="back" href="../">&larr; back to the walk-through</a>
+</div>
+</body>
+</html>

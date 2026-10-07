@@ -1,0 +1,722 @@
+[
+ {
+  "kind": "spiral",
+  "monotonicity": 0.99,
+  "centre": [
+   -2.74,
+   -15.88
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 5.34,
+  "climb_m": 3.94,
+  "sweep_deg": 285,
+  "treads_per_turn": 29.7,
+  "going_at_walkline_m": 0.28,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.979,
+  "centre": [
+   8.16,
+   10.42
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 6.02,
+  "climb_m": 4.53,
+  "sweep_deg": 330,
+  "treads_per_turn": 33.4,
+  "going_at_walkline_m": 0.24,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.978,
+  "centre": [
+   -10.14,
+   41.62
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.8,
+  "climb_m": 4.5,
+  "sweep_deg": 330,
+  "treads_per_turn": 26.7,
+  "going_at_walkline_m": 0.31,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.975,
+  "centre": [
+   10.66,
+   -18.88
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.14,
+  "climb_m": 3.43,
+  "sweep_deg": 330,
+  "treads_per_turn": 23.0,
+  "going_at_walkline_m": 0.36,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.968,
+  "centre": [
+   -4.54,
+   -3.58
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.39,
+  "climb_m": 2.72,
+  "sweep_deg": 285,
+  "treads_per_turn": 18.9,
+  "going_at_walkline_m": 0.43,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.964,
+  "centre": [
+   25.76,
+   1.42
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 7.34,
+  "climb_m": 5.19,
+  "sweep_deg": 270,
+  "treads_per_turn": 40.8,
+  "going_at_walkline_m": 0.2,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.976,
+  "centre": [
+   -23.94,
+   39.92
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.62,
+  "climb_m": 4.44,
+  "sweep_deg": 345,
+  "treads_per_turn": 25.6,
+  "going_at_walkline_m": 0.32,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": "rise continues past the treads -- likely a vaulted ceiling, not a stair"
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.96,
+  "centre": [
+   -14.44,
+   -5.98
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 6.35,
+  "climb_m": 5.05,
+  "sweep_deg": 345,
+  "treads_per_turn": 35.3,
+  "going_at_walkline_m": 0.23,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.958,
+  "centre": [
+   1.06,
+   17.92
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.32,
+  "climb_m": 4.07,
+  "sweep_deg": 345,
+  "treads_per_turn": 24.0,
+  "going_at_walkline_m": 0.34,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": "rise continues past the treads -- likely a vaulted ceiling, not a stair"
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.957,
+  "centre": [
+   0.26,
+   -6.48
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.57,
+  "climb_m": 4.42,
+  "sweep_deg": 345,
+  "treads_per_turn": 25.4,
+  "going_at_walkline_m": 0.32,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": "rise continues past the treads -- likely a vaulted ceiling, not a stair"
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.955,
+  "centre": [
+   11.16,
+   37.02
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.33,
+  "climb_m": 2.62,
+  "sweep_deg": 345,
+  "treads_per_turn": 18.5,
+  "going_at_walkline_m": 0.44,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.955,
+  "centre": [
+   -6.54,
+   27.82
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 1.98,
+  "climb_m": 1.85,
+  "sweep_deg": 345,
+  "treads_per_turn": 11.0,
+  "going_at_walkline_m": 0.74,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.952,
+  "centre": [
+   19.66,
+   -8.38
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 5.29,
+  "climb_m": 4.54,
+  "sweep_deg": 345,
+  "treads_per_turn": 29.4,
+  "going_at_walkline_m": 0.28,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.95,
+  "centre": [
+   -8.64,
+   36.52
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.52,
+  "climb_m": 4.78,
+  "sweep_deg": 330,
+  "treads_per_turn": 25.1,
+  "going_at_walkline_m": 0.33,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.95,
+  "centre": [
+   -3.84,
+   33.32
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.13,
+  "climb_m": 2.7,
+  "sweep_deg": 285,
+  "treads_per_turn": 17.4,
+  "going_at_walkline_m": 0.47,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.949,
+  "centre": [
+   24.76,
+   28.22
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 6.45,
+  "climb_m": 4.97,
+  "sweep_deg": 315,
+  "treads_per_turn": 35.8,
+  "going_at_walkline_m": 0.23,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.948,
+  "centre": [
+   9.36,
+   16.72
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.93,
+  "climb_m": 3.65,
+  "sweep_deg": 345,
+  "treads_per_turn": 21.8,
+  "going_at_walkline_m": 0.37,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.946,
+  "centre": [
+   23.16,
+   30.52
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.51,
+  "climb_m": 3.54,
+  "sweep_deg": 285,
+  "treads_per_turn": 25.1,
+  "going_at_walkline_m": 0.33,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.938,
+  "centre": [
+   -15.74,
+   16.32
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.56,
+  "climb_m": 4.06,
+  "sweep_deg": 345,
+  "treads_per_turn": 25.3,
+  "going_at_walkline_m": 0.32,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.938,
+  "centre": [
+   3.06,
+   5.42
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.48,
+  "climb_m": 4.24,
+  "sweep_deg": 345,
+  "treads_per_turn": 24.9,
+  "going_at_walkline_m": 0.33,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.938,
+  "centre": [
+   34.96,
+   11.22
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.48,
+  "climb_m": 3.13,
+  "sweep_deg": 315,
+  "treads_per_turn": 19.3,
+  "going_at_walkline_m": 0.42,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.935,
+  "centre": [
+   1.66,
+   -9.68
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.05,
+  "climb_m": 2.56,
+  "sweep_deg": 345,
+  "treads_per_turn": 16.9,
+  "going_at_walkline_m": 0.48,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.934,
+  "centre": [
+   -19.24,
+   25.52
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.99,
+  "climb_m": 2.55,
+  "sweep_deg": 345,
+  "treads_per_turn": 16.6,
+  "going_at_walkline_m": 0.49,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.933,
+  "centre": [
+   -0.74,
+   -10.98
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.7,
+  "climb_m": 4.37,
+  "sweep_deg": 345,
+  "treads_per_turn": 26.1,
+  "going_at_walkline_m": 0.31,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.932,
+  "centre": [
+   -14.04,
+   6.22
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.59,
+  "climb_m": 1.63,
+  "sweep_deg": 285,
+  "treads_per_turn": 14.4,
+  "going_at_walkline_m": 0.57,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.93,
+  "centre": [
+   12.96,
+   -15.28
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 4.94,
+  "climb_m": 4.57,
+  "sweep_deg": 345,
+  "treads_per_turn": 27.4,
+  "going_at_walkline_m": 0.3,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.929,
+  "centre": [
+   7.06,
+   6.92
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 5.24,
+  "climb_m": 4.41,
+  "sweep_deg": 315,
+  "treads_per_turn": 29.1,
+  "going_at_walkline_m": 0.28,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.929,
+  "centre": [
+   23.56,
+   -4.08
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 6.39,
+  "climb_m": 4.95,
+  "sweep_deg": 345,
+  "treads_per_turn": 35.5,
+  "going_at_walkline_m": 0.23,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": "rise continues past the treads -- likely a vaulted ceiling, not a stair"
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.929,
+  "centre": [
+   -28.64,
+   -15.78
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.25,
+  "climb_m": 3.3,
+  "sweep_deg": 345,
+  "treads_per_turn": 18.1,
+  "going_at_walkline_m": 0.45,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.928,
+  "centre": [
+   16.36,
+   -11.28
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.8,
+  "climb_m": 2.65,
+  "sweep_deg": 345,
+  "treads_per_turn": 15.6,
+  "going_at_walkline_m": 0.52,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.927,
+  "centre": [
+   -21.94,
+   25.22
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.39,
+  "climb_m": 3.48,
+  "sweep_deg": 345,
+  "treads_per_turn": 18.8,
+  "going_at_walkline_m": 0.43,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.923,
+  "centre": [
+   1.26,
+   13.82
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.76,
+  "climb_m": 2.31,
+  "sweep_deg": 345,
+  "treads_per_turn": 15.3,
+  "going_at_walkline_m": 0.53,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.923,
+  "centre": [
+   -4.64,
+   20.42
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 1.5,
+  "climb_m": 1.25,
+  "sweep_deg": 345,
+  "treads_per_turn": 8.3,
+  "going_at_walkline_m": 0.98,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.921,
+  "centre": [
+   -21.44,
+   23.42
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 5.23,
+  "climb_m": 5.03,
+  "sweep_deg": 345,
+  "treads_per_turn": 29.1,
+  "going_at_walkline_m": 0.28,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.919,
+  "centre": [
+   -13.24,
+   -0.88
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 7.45,
+  "climb_m": 5.86,
+  "sweep_deg": 345,
+  "treads_per_turn": 41.4,
+  "going_at_walkline_m": 0.2,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.91,
+  "centre": [
+   -10.24,
+   38.22
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.6,
+  "climb_m": 2.52,
+  "sweep_deg": 285,
+  "treads_per_turn": 14.5,
+  "going_at_walkline_m": 0.56,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ }
+]

@@ -1,0 +1,126 @@
+=== ingest: Stevens_Estate ===
+  export  C:\Cinematography\Scans\Stevens_Estate_100326_slow_2026-09-15
+  output  C:\Cinematography\Scouts\Stevens_Estate
+
+  manifest    Stevens_Estate_100326_slow.lcc2
+  fileType    quality
+  splats      31,299,248 total, 6 LOD levels, level0 15,913,943
+  build       quality 3, 19:34:03, walk 0.25 m/s, raw 21.4 GB
+
+  storeys     2  (wall_seg + splat union (analysis covers 100% of the sheet))
+     0: floor -0.90  ceiling +2.20  height 3.10 m
+     1: floor +2.20  ceiling +5.50  height 3.30 m
+
+--- storey 0: colour ortho plate ---
+  tiles      55
+  storey     0 of 2   (wall_seg + splat union (analysis covers 100% of the sheet))
+  extent     x -7.69..30.10  y -5.75..25.62 m
+  cut        z -1.10 .. 1.95 m  (ground -0.90, ceiling 2.20)
+  raster     3024 x 2509 px at 80 px/m
+     lod 0: 0 splats
+     lod 1: 225,029 splats
+     lod 2: 436,944 splats
+     lod 3: 832,913 splats
+     lod 4: 1,575,278 splats
+     lod 5: 3,000,701 splats
+     lod 6: 4,857,589 splats
+  painted    10,928,454 splats, 13.5% pixel coverage
+  denoised   dropped 0.8% of painted pixels as floaters
+  filled     25.4% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_L0_ortho.png
+  wrote      Stevens_Estate_L0_ortho.json  (georeference)
+
+--- storey 0: stairs ---
+  grid       152 x 126 cells at 25 cm, 46% populated
+  stairs     0 confirmed, 3 weak candidate(s)
+  weak      spiral at (14.01, 20.15)  r=0.951
+             climbs 4.92 m over 345 deg, 5.33 m per turn, 29.6 treads/turn
+             0.80 m wide, going 0.28 m at the walk line, ascends counter-clockwise
+  weak      spiral at (18.81, 8.15)  r=0.934
+             climbs 2.55 m over 345 deg, 2.48 m per turn, 13.8 treads/turn
+             0.80 m wide, going 0.59 m at the walk line, ascends counter-clockwise
+  weak      spiral at (17.51, 1.95)  r=0.920
+             climbs 2.55 m over 330 deg, 2.63 m per turn, 14.6 treads/turn
+             0.80 m wide, going 0.56 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_L0_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- storey 1: colour ortho plate ---
+  tiles      55
+  storey     1 of 2   (wall_seg + splat union (analysis covers 100% of the sheet))
+  extent     x -7.69..30.10  y -5.75..25.62 m
+  cut        z 2.00 .. 5.25 m  (ground 2.20, ceiling 5.50)
+  raster     3024 x 2509 px at 80 px/m
+     lod 0: 0 splats
+     lod 1: 199,611 splats
+     lod 2: 398,856 splats
+     lod 3: 776,801 splats
+     lod 4: 1,485,642 splats
+     lod 5: 2,850,877 splats
+     lod 6: 4,530,274 splats
+  painted    10,242,061 splats, 15.2% pixel coverage
+  denoised   dropped 0.7% of painted pixels as floaters
+  filled     27.6% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_L1_ortho.png
+  wrote      Stevens_Estate_L1_ortho.json  (georeference)
+
+--- storey 1: stairs ---
+  grid       152 x 126 cells at 25 cm, 37% populated
+  stairs     0 confirmed, 6 weak candidate(s)
+  weak      spiral at (15.31, 9.75)  r=0.954
+             climbs 1.38 m over 345 deg, 1.47 m per turn, 8.1 treads/turn
+             0.80 m wide, going 1.00 m at the walk line, ascends counter-clockwise
+  weak      spiral at (19.11, 12.35)  r=0.947
+             climbs 3.05 m over 345 deg, 3.60 m per turn, 20.0 treads/turn
+             0.80 m wide, going 0.41 m at the walk line, ascends counter-clockwise
+  weak      spiral at (13.51, 16.55)  r=0.946
+             climbs 1.94 m over 345 deg, 2.06 m per turn, 11.4 treads/turn
+             0.80 m wide, going 0.72 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-3.99, 1.85)  r=0.942
+             climbs 2.56 m over 315 deg, 2.80 m per turn, 15.6 treads/turn
+             0.80 m wide, going 0.53 m at the walk line, ascends counter-clockwise
+  weak      spiral at (3.61, 13.45)  r=0.937
+             climbs 1.91 m over 345 deg, 2.21 m per turn, 12.3 treads/turn
+             0.80 m wide, going 0.67 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-1.49, 9.65)  r=0.921
+             climbs 1.57 m over 345 deg, 1.76 m per turn, 9.8 treads/turn
+             0.80 m wide, going 0.83 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_L1_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- walking surface ---
+  grid       315 x 262 cells at 12 cm
+  scanned    35.3% of cells have a floor
+  regions    26 patches where the surface sits above the floor plane
+             (not classified -- stairs are stairs.py's job)
+  wrote      C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_levels.png (+ .json, _height.npy)
+
+--- drafted plan ---
+  grid dirs      0.0 deg, 20.0 deg, 90.0 deg, 110.0 deg
+  walls          152 segments -> 122 consolidated
+  openings       2 doors with swings, 10 windows
+  sheet          37.8 x 31.4 m at 80 px/m
+  wrote          C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_drawn.png   (composite)
+  wrote          C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_drawn_plate.png   (plate only, undimmed)
+  wrote          C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_drawn_lines.png   (linework only, transparent)
+  wrote          C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_drawn.svg  (vector linework over embedded plate)
+
+--- linework only (CAD) ---
+  walls          152
+  openings drawn 17 placements from 10 detected
+  sheet          31.93 x 33.68 m, SVG in real millimetres
+  wrote          C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_plan.svg
+
+--- white-box proxy ---
+  walls          152 of 152 lines
+  openings cut   13 placements from 10 detected
+  floor/ceiling  -0.850 .. 2.188 m  (height 3.04 m)
+  mesh           756 verts, 378 triangles
+  wrote          C:\Cinematography\Scouts\Stevens_Estate\Stevens_Estate_whitebox.obj
+
+=== ingest clean ===
+
+Next:
+  python tools/ue_splat.py "C:\Cinematography\Scans\Stevens_Estate_100326_slow_2026-09-15\lcc2-result\Stevens_Estate_100326_slow.lcc2"
+  import Stevens_Estate_whitebox.obj, place as ALCC2ProxyMesh at uniform scale 100
+  print Stevens_Estate_drawn.png for the grip/lighting plot

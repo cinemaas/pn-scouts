@@ -1,0 +1,112 @@
+{
+  "location": "House 1600s Interior",
+  "slug": "house1600s-interior",
+  "captured_with": "XGRIDS PortalCam, reconstructed in LCC Studio",
+  "reconstructed": "2026-08-24",
+  "coordinate_system": {
+    "units": "metres",
+    "up_axis": "Z",
+    "handedness": "right",
+    "origin": "Where the operator stood at the start of the capture walk. Not a building corner and not a geographic datum.",
+    "georeferenced": false
+  },
+  "storeys": [
+    {
+      "index": 0,
+      "floor_m": 1.9,
+      "ceiling_m": 3.9,
+      "height_m": 2.0
+    }
+  ],
+  "extent": {
+    "x_min_m": -13.65,
+    "x_max_m": 6.69,
+    "y_min_m": -15.43,
+    "y_max_m": 8.45,
+    "width_m": 20.34,
+    "depth_m": 23.88
+  },
+  "splats": {
+    "full_detail_level0": 3305527,
+    "lod_levels": [
+      3305527,
+      1649209,
+      824557,
+      412273
+    ]
+  },
+  "walls": {
+    "format": "2D segments in the X/Y plane; height comes from walls/line_limit_z.json (z_ground, z_ceiling).",
+    "openings": "walls/window_door_candidate_list.json gives doors and windows positioned along those segments."
+  },
+  "files": {
+    "plan.svg": {
+      "bytes": 7659,
+      "what": "Drafted wall linework. SVG user units are real millimetres."
+    },
+    "drawn.svg": {
+      "bytes": 484334,
+      "what": "The same linework over the colour ortho plate."
+    },
+    "whitebox.obj": {
+      "bytes": 9768,
+      "what": "Wall/floor/ceiling proxy solid, metres, Z up. Openings cut."
+    },
+    "levels.json": {
+      "bytes": 4288,
+      "what": "Walking-surface height map and storey model."
+    },
+    "ingest_report.txt": {
+      "bytes": 3472,
+      "what": "Everything the ingest measured, in full."
+    },
+    "ortho.png": {
+      "bytes": 1501894,
+      "what": "Georeferenced top-down colour plate."
+    },
+    "ortho.json": {
+      "bytes": 234,
+      "what": "Georeference for ortho.png: world extent and pixels per metre."
+    },
+    "stairs.json": {
+      "bytes": 375,
+      "what": "Detected stair geometry: rise, going, width, direction."
+    },
+    "walls\\line_result_list.json": {
+      "bytes": 20616,
+      "what": "Wall segments, 2D in the X/Y plane."
+    },
+    "walls\\line_candidate_list.json": {
+      "bytes": 44308,
+      "what": "Candidate wall segments before consolidation."
+    },
+    "walls\\window_door_candidate_list.json": {
+      "bytes": 1714,
+      "what": "Door and window openings along the walls."
+    },
+    "walls\\line_limit_z.json": {
+      "bytes": 142,
+      "what": "Floor and ceiling heights (z_ground, z_ceiling), metres."
+    },
+    "walls\\main_dirs.json": {
+      "bytes": 87,
+      "what": "Dominant wall directions, degrees."
+    },
+    "walls\\render_param.json": {
+      "bytes": 246,
+      "what": "Sheet extent and scale used for the plan."
+    },
+    "walls\\run_summary.json": {
+      "bytes": 104,
+      "what": "Space-recognition run summary."
+    },
+    "walls\\poses.csv": {
+      "bytes": 576481,
+      "what": "Capture trajectory: timestamp, position (m), orientation quaternion."
+    },
+    "points.ply": {
+      "bytes": 11200362,
+      "what": "Decimated splat centres with colour, metres, Z up. ~200k points."
+    }
+  }
+}

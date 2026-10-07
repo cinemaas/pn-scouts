@@ -1,0 +1,185 @@
+=== ingest: House1600s_Ext ===
+  export  C:\Cinematography\Scans\House1600s_Ext_181539_slow_2026-08-25
+  output  C:\Cinematography\Scouts\House1600s_Ext
+
+  manifest    House1600s_Ext_181539_slow.lcc2
+  fileType    quality
+  splats      25,991,939 total, 6 LOD levels, level0 13,228,613
+  build       quality 3, 08:10:43, walk 0.33 m/s, raw 8.8 GB
+
+  storeys     1  (wall_seg + splat union (analysis covers 49% of the sheet))
+     0: floor -0.00  ceiling +3.40  height 3.40 m
+
+--- storey 0: colour ortho plate ---
+  tiles      46
+  storey     0 of 1   (wall_seg + splat union (analysis covers 49% of the sheet))
+  extent     x -39.44..39.03  y -29.18..48.20 m
+  cut        z -0.20 .. 3.15 m  (ground -0.00, ceiling 3.40)
+  raster     5493 x 5417 px at 70 px/m
+     lod 0: 0 splats
+     lod 1: 242,073 splats
+     lod 2: 475,872 splats
+     lod 3: 933,031 splats
+     lod 4: 1,843,795 splats
+     lod 5: 3,739,359 splats
+     lod 6: 7,513,690 splats
+  painted    14,747,820 splats, 10.5% pixel coverage
+  denoised   dropped 0.9% of painted pixels as floaters
+  filled     19.1% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_ortho.png
+  wrote      House1600s_Ext_ortho.json  (georeference)
+
+--- storey 0: stairs ---
+  grid       314 x 310 cells at 25 cm, 35% populated
+  stairs     6 confirmed, 30 weak candidate(s)
+  CONFIRMED spiral at (-2.74, -15.88)  r=0.990
+             climbs 3.94 m over 285 deg, 5.34 m per turn, 29.7 treads/turn
+             0.80 m wide, going 0.28 m at the walk line, ascends counter-clockwise
+  CONFIRMED spiral at (8.16, 10.42)  r=0.979
+             climbs 4.53 m over 330 deg, 6.02 m per turn, 33.4 treads/turn
+             0.80 m wide, going 0.24 m at the walk line, ascends counter-clockwise
+  CONFIRMED spiral at (-10.14, 41.62)  r=0.978
+             climbs 4.50 m over 330 deg, 4.80 m per turn, 26.7 treads/turn
+             0.80 m wide, going 0.31 m at the walk line, ascends counter-clockwise
+  CONFIRMED spiral at (10.66, -18.88)  r=0.975
+             climbs 3.43 m over 330 deg, 4.14 m per turn, 23.0 treads/turn
+             0.80 m wide, going 0.36 m at the walk line, ascends counter-clockwise
+  CONFIRMED spiral at (-4.54, -3.58)  r=0.968
+             climbs 2.72 m over 285 deg, 3.39 m per turn, 18.9 treads/turn
+             0.80 m wide, going 0.43 m at the walk line, ascends counter-clockwise
+  CONFIRMED spiral at (25.76, 1.42)  r=0.964
+             climbs 5.19 m over 270 deg, 7.34 m per turn, 40.8 treads/turn
+             0.80 m wide, going 0.20 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-23.94, 39.92)  r=0.976
+             rise continues past the treads -- likely a vaulted ceiling, not a stair
+             climbs 4.44 m over 345 deg, 4.62 m per turn, 25.6 treads/turn
+             0.80 m wide, going 0.32 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-14.44, -5.98)  r=0.960
+             climbs 5.05 m over 345 deg, 6.35 m per turn, 35.3 treads/turn
+             0.80 m wide, going 0.23 m at the walk line, ascends counter-clockwise
+  weak      spiral at (1.06, 17.92)  r=0.958
+             rise continues past the treads -- likely a vaulted ceiling, not a stair
+             climbs 4.07 m over 345 deg, 4.32 m per turn, 24.0 treads/turn
+             0.80 m wide, going 0.34 m at the walk line, ascends counter-clockwise
+  weak      spiral at (0.26, -6.48)  r=0.957
+             rise continues past the treads -- likely a vaulted ceiling, not a stair
+             climbs 4.42 m over 345 deg, 4.57 m per turn, 25.4 treads/turn
+             0.80 m wide, going 0.32 m at the walk line, ascends counter-clockwise
+  weak      spiral at (11.16, 37.02)  r=0.955
+             climbs 2.62 m over 345 deg, 3.33 m per turn, 18.5 treads/turn
+             0.80 m wide, going 0.44 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-6.54, 27.82)  r=0.955
+             climbs 1.85 m over 345 deg, 1.98 m per turn, 11.0 treads/turn
+             0.80 m wide, going 0.74 m at the walk line, ascends counter-clockwise
+  weak      spiral at (19.66, -8.38)  r=0.952
+             climbs 4.54 m over 345 deg, 5.29 m per turn, 29.4 treads/turn
+             0.80 m wide, going 0.28 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-8.64, 36.52)  r=0.950
+             climbs 4.78 m over 330 deg, 4.52 m per turn, 25.1 treads/turn
+             0.80 m wide, going 0.33 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-3.84, 33.32)  r=0.950
+             climbs 2.70 m over 285 deg, 3.13 m per turn, 17.4 treads/turn
+             0.80 m wide, going 0.47 m at the walk line, ascends counter-clockwise
+  weak      spiral at (24.76, 28.22)  r=0.949
+             climbs 4.97 m over 315 deg, 6.45 m per turn, 35.8 treads/turn
+             0.80 m wide, going 0.23 m at the walk line, ascends counter-clockwise
+  weak      spiral at (9.36, 16.72)  r=0.948
+             climbs 3.65 m over 345 deg, 3.93 m per turn, 21.8 treads/turn
+             0.80 m wide, going 0.37 m at the walk line, ascends counter-clockwise
+  weak      spiral at (23.16, 30.52)  r=0.946
+             climbs 3.54 m over 285 deg, 4.51 m per turn, 25.1 treads/turn
+             0.80 m wide, going 0.33 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-15.74, 16.32)  r=0.938
+             climbs 4.06 m over 345 deg, 4.56 m per turn, 25.3 treads/turn
+             0.80 m wide, going 0.32 m at the walk line, ascends counter-clockwise
+  weak      spiral at (3.06, 5.42)  r=0.938
+             climbs 4.24 m over 345 deg, 4.48 m per turn, 24.9 treads/turn
+             0.80 m wide, going 0.33 m at the walk line, ascends counter-clockwise
+  weak      spiral at (34.96, 11.22)  r=0.938
+             climbs 3.13 m over 315 deg, 3.48 m per turn, 19.3 treads/turn
+             0.80 m wide, going 0.42 m at the walk line, ascends counter-clockwise
+  weak      spiral at (1.66, -9.68)  r=0.935
+             climbs 2.56 m over 345 deg, 3.05 m per turn, 16.9 treads/turn
+             0.80 m wide, going 0.48 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-19.24, 25.52)  r=0.934
+             climbs 2.55 m over 345 deg, 2.99 m per turn, 16.6 treads/turn
+             0.80 m wide, going 0.49 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-0.74, -10.98)  r=0.933
+             climbs 4.37 m over 345 deg, 4.70 m per turn, 26.1 treads/turn
+             0.80 m wide, going 0.31 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-14.04, 6.22)  r=0.932
+             climbs 1.63 m over 285 deg, 2.59 m per turn, 14.4 treads/turn
+             0.80 m wide, going 0.57 m at the walk line, ascends counter-clockwise
+  weak      spiral at (12.96, -15.28)  r=0.930
+             climbs 4.57 m over 345 deg, 4.94 m per turn, 27.4 treads/turn
+             0.80 m wide, going 0.30 m at the walk line, ascends counter-clockwise
+  weak      spiral at (7.06, 6.92)  r=0.929
+             climbs 4.41 m over 315 deg, 5.24 m per turn, 29.1 treads/turn
+             0.80 m wide, going 0.28 m at the walk line, ascends counter-clockwise
+  weak      spiral at (23.56, -4.08)  r=0.929
+             rise continues past the treads -- likely a vaulted ceiling, not a stair
+             climbs 4.95 m over 345 deg, 6.39 m per turn, 35.5 treads/turn
+             0.80 m wide, going 0.23 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-28.64, -15.78)  r=0.929
+             climbs 3.30 m over 345 deg, 3.25 m per turn, 18.1 treads/turn
+             0.80 m wide, going 0.45 m at the walk line, ascends counter-clockwise
+  weak      spiral at (16.36, -11.28)  r=0.928
+             climbs 2.65 m over 345 deg, 2.80 m per turn, 15.6 treads/turn
+             0.80 m wide, going 0.52 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-21.94, 25.22)  r=0.927
+             climbs 3.48 m over 345 deg, 3.39 m per turn, 18.8 treads/turn
+             0.80 m wide, going 0.43 m at the walk line, ascends counter-clockwise
+  weak      spiral at (1.26, 13.82)  r=0.923
+             climbs 2.31 m over 345 deg, 2.76 m per turn, 15.3 treads/turn
+             0.80 m wide, going 0.53 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-4.64, 20.42)  r=0.923
+             climbs 1.25 m over 345 deg, 1.50 m per turn, 8.3 treads/turn
+             0.80 m wide, going 0.98 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-21.44, 23.42)  r=0.921
+             climbs 5.03 m over 345 deg, 5.23 m per turn, 29.1 treads/turn
+             0.80 m wide, going 0.28 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-13.24, -0.88)  r=0.919
+             climbs 5.86 m over 345 deg, 7.45 m per turn, 41.4 treads/turn
+             0.80 m wide, going 0.20 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-10.24, 38.22)  r=0.910
+             climbs 2.52 m over 285 deg, 2.60 m per turn, 14.5 treads/turn
+             0.80 m wide, going 0.56 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- walking surface ---
+  grid       371 x 560 cells at 12 cm
+  scanned    49.5% of cells have a floor
+  regions    43 patches where the surface sits above the floor plane
+             (not classified -- stairs are stairs.py's job)
+  wrote      C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_levels.png (+ .json, _height.npy)
+
+--- drafted plan ---
+  grid dirs      0.0 deg, 58.0 deg, 90.0 deg, 148.0 deg
+  walls          113 segments -> 101 consolidated
+  openings       0 doors with swings, 16 windows
+  sheet          78.5 x 77.4 m at 70 px/m
+  wrote          C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_drawn.png   (composite)
+  wrote          C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_drawn_plate.png   (plate only, undimmed)
+  wrote          C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_drawn_lines.png   (linework only, transparent)
+  wrote          C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_drawn.svg  (vector linework over embedded plate)
+
+--- linework only (CAD) ---
+  walls          113
+  openings drawn 16 placements from 15 detected
+  sheet          37.47 x 63.88 m, SVG in real millimetres
+  wrote          C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_plan.svg
+
+--- white-box proxy ---
+  walls          113 of 113 lines
+  openings cut   16 placements from 15 detected
+  floor/ceiling  0.091 .. 2.200 m  (height 2.11 m)
+  mesh           648 verts, 324 triangles
+  wrote          C:\Cinematography\Scouts\House1600s_Ext\House1600s_Ext_whitebox.obj
+
+=== ingest clean ===
+
+Next:
+  python tools/ue_splat.py "C:\Cinematography\Scans\House1600s_Ext_181539_slow_2026-08-25\lcc2-result\House1600s_Ext_181539_slow.lcc2"
+  import House1600s_Ext_whitebox.obj, place as ALCC2ProxyMesh at uniform scale 100
+  print House1600s_Ext_drawn.png for the grip/lighting plot

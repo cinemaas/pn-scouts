@@ -1,0 +1,102 @@
+[
+ {
+  "kind": "spiral",
+  "monotonicity": 0.966,
+  "centre": [
+   3.41,
+   8.68
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 5.48,
+  "climb_m": 3.46,
+  "sweep_deg": 255,
+  "treads_per_turn": 30.4,
+  "going_at_walkline_m": 0.27,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": true,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.949,
+  "centre": [
+   -8.29,
+   10.98
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.26,
+  "climb_m": 2.4,
+  "sweep_deg": 345,
+  "treads_per_turn": 12.6,
+  "going_at_walkline_m": 0.65,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.946,
+  "centre": [
+   -9.19,
+   0.58
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 1.54,
+  "climb_m": 1.72,
+  "sweep_deg": 345,
+  "treads_per_turn": 8.6,
+  "going_at_walkline_m": 0.95,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.945,
+  "centre": [
+   5.21,
+   7.78
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 2.82,
+  "climb_m": 1.75,
+  "sweep_deg": 270,
+  "treads_per_turn": 15.7,
+  "going_at_walkline_m": 0.52,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ },
+ {
+  "kind": "spiral",
+  "monotonicity": 0.92,
+  "centre": [
+   -7.19,
+   7.68
+  ],
+  "r_inner": 0.9,
+  "r_outer": 1.7,
+  "width_m": 0.8,
+  "rise_per_turn_m": 3.64,
+  "climb_m": 2.88,
+  "sweep_deg": 345,
+  "treads_per_turn": 20.2,
+  "going_at_walkline_m": 0.4,
+  "ascends": "counter-clockwise",
+  "storey": 0,
+  "confirmed": false,
+  "note": ""
+ }
+]

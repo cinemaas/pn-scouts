@@ -1,0 +1,143 @@
+=== ingest: Klaypool ===
+  export  C:\Cinematography\Scans\Klaypool_174917_slow_2026-08-25
+  output  C:\Cinematography\Scouts\Klaypool
+
+  manifest    Klaypool_174917_slow.lcc2
+  fileType    quality
+  splats      11,237,599 total, 5 LOD levels, level0 5,809,545
+  build       quality 3, 04:00:48, walk 0.23 m/s, raw 7.0 GB
+
+  storeys     3  (wall_seg + splat union (analysis covers 34% of the sheet))
+     0: floor -1.50  ceiling +0.50  height 2.00 m
+     1: floor +0.50  ceiling +3.30  height 2.80 m
+     2: floor +3.30  ceiling +8.38  height 5.08 m
+
+--- storey 0: colour ortho plate ---
+  tiles      22
+  storey     0 of 3   (wall_seg + splat union (analysis covers 34% of the sheet))
+  extent     x -26.99..26.50  y -11.02..31.39 m
+  cut        z -1.70 .. 0.25 m  (ground -1.50, ceiling 0.50)
+  raster     4280 x 3393 px at 80 px/m
+     lod 0: 0 splats
+     lod 1: 148,544 splats
+     lod 2: 279,261 splats
+     lod 3: 513,489 splats
+     lod 4: 995,892 splats
+     lod 5: 1,687,929 splats
+  painted    3,625,115 splats, 4.1% pixel coverage
+  denoised   dropped 0.5% of painted pixels as floaters
+  filled     8.1% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_L0_ortho.png
+  wrote      Klaypool_L0_ortho.json  (georeference)
+
+--- storey 0: stairs ---
+  grid       214 x 170 cells at 25 cm, 19% populated
+  stairs     1 confirmed, 4 weak candidate(s)
+  CONFIRMED spiral at (3.41, 8.68)  r=0.966
+             climbs 3.46 m over 255 deg, 5.48 m per turn, 30.4 treads/turn
+             0.80 m wide, going 0.27 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-8.29, 10.98)  r=0.949
+             climbs 2.40 m over 345 deg, 2.26 m per turn, 12.6 treads/turn
+             0.80 m wide, going 0.65 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-9.19, 0.58)  r=0.946
+             climbs 1.72 m over 345 deg, 1.54 m per turn, 8.6 treads/turn
+             0.80 m wide, going 0.95 m at the walk line, ascends counter-clockwise
+  weak      spiral at (5.21, 7.78)  r=0.945
+             climbs 1.75 m over 270 deg, 2.82 m per turn, 15.7 treads/turn
+             0.80 m wide, going 0.52 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-7.19, 7.68)  r=0.920
+             climbs 2.88 m over 345 deg, 3.64 m per turn, 20.2 treads/turn
+             0.80 m wide, going 0.40 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_L0_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- storey 1: colour ortho plate ---
+  tiles      22
+  storey     1 of 3   (wall_seg + splat union (analysis covers 34% of the sheet))
+  extent     x -26.99..26.50  y -11.02..31.39 m
+  cut        z 0.30 .. 3.05 m  (ground 0.50, ceiling 3.30)
+  raster     4280 x 3393 px at 80 px/m
+     lod 0: 0 splats
+     lod 1: 103,100 splats
+     lod 2: 180,163 splats
+     lod 3: 317,028 splats
+     lod 4: 564,577 splats
+     lod 5: 804,827 splats
+  painted    1,969,695 splats, 2.7% pixel coverage
+  denoised   dropped 0.4% of painted pixels as floaters
+  filled     5.5% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_L1_ortho.png
+  wrote      Klaypool_L1_ortho.json  (georeference)
+
+--- storey 1: stairs ---
+  grid       214 x 170 cells at 25 cm, 12% populated
+  stairs     0 confirmed, 2 weak candidate(s)
+  weak      spiral at (5.21, 7.78)  r=0.945
+             climbs 1.75 m over 270 deg, 2.82 m per turn, 15.7 treads/turn
+             0.80 m wide, going 0.52 m at the walk line, ascends counter-clockwise
+  weak      spiral at (-7.29, 19.18)  r=0.917
+             climbs 2.58 m over 345 deg, 3.06 m per turn, 17.0 treads/turn
+             0.80 m wide, going 0.48 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_L1_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- storey 2: colour ortho plate ---
+  tiles      22
+  storey     2 of 3   (wall_seg + splat union (analysis covers 34% of the sheet))
+  extent     x -26.99..26.50  y -11.02..31.39 m
+  cut        z 3.10 .. 8.13 m  (ground 3.30, ceiling 8.38)
+  raster     4280 x 3393 px at 80 px/m
+     lod 0: 0 splats
+     lod 1: 75,944 splats
+     lod 2: 137,073 splats
+     lod 3: 238,793 splats
+     lod 4: 417,763 splats
+     lod 5: 570,728 splats
+  painted    1,440,301 splats, 0.9% pixel coverage
+  denoised   dropped 0.3% of painted pixels as floaters
+  filled     0.9% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_L2_ortho.png
+  wrote      Klaypool_L2_ortho.json  (georeference)
+
+--- storey 2: stairs ---
+  grid       214 x 170 cells at 25 cm, 6% populated
+  stairs     0 confirmed, 0 weak candidate(s)
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_L2_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- walking surface ---
+  grid       267 x 203 cells at 12 cm
+  scanned    38.2% of cells have a floor
+  regions    17 patches where the surface sits above the floor plane
+             (not classified -- stairs are stairs.py's job)
+  wrote      C:\Cinematography\Scouts\Klaypool\Klaypool_levels.png (+ .json, _height.npy)
+
+--- drafted plan ---
+  grid dirs      0.0 deg, 70.0 deg, 90.0 deg, 160.0 deg
+  walls          72 segments -> 59 consolidated
+  openings       2 doors with swings, 6 windows
+  sheet          53.5 x 42.4 m at 80 px/m
+  wrote          C:\Cinematography\Scouts\Klaypool\Klaypool_drawn.png   (composite)
+  wrote          C:\Cinematography\Scouts\Klaypool\Klaypool_drawn_plate.png   (plate only, undimmed)
+  wrote          C:\Cinematography\Scouts\Klaypool\Klaypool_drawn_lines.png   (linework only, transparent)
+  wrote          C:\Cinematography\Scouts\Klaypool\Klaypool_drawn.svg  (vector linework over embedded plate)
+
+--- linework only (CAD) ---
+  walls          72
+  openings drawn 14 placements from 7 detected
+  sheet          28.40 x 20.23 m, SVG in real millimetres
+  wrote          C:\Cinematography\Scouts\Klaypool\Klaypool_plan.svg
+
+--- white-box proxy ---
+  walls          72 of 72 lines
+  openings cut   12 placements from 7 detected
+  floor/ceiling  -1.508 .. 0.565 m  (height 2.07 m)
+  mesh           396 verts, 198 triangles
+  wrote          C:\Cinematography\Scouts\Klaypool\Klaypool_whitebox.obj
+
+=== ingest clean ===
+
+Next:
+  python tools/ue_splat.py "C:\Cinematography\Scans\Klaypool_174917_slow_2026-08-25\lcc2-result\Klaypool_174917_slow.lcc2"
+  import Klaypool_whitebox.obj, place as ALCC2ProxyMesh at uniform scale 100
+  print Klaypool_drawn.png for the grip/lighting plot

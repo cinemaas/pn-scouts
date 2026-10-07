@@ -1,0 +1,75 @@
+=== ingest: House1600s ===
+  export  C:\Cinematography\Scans\House1600s_expOff_2026-08-25
+  output  C:\Cinematography\Scouts\House1600s
+
+  manifest    House1600s_180335_expOff.lcc2
+  fileType    quality
+  splats      7,847,150 total, 5 LOD levels, level0 4,055,272
+  build       quality 3, 03:44:55, walk 0.24 m/s, raw 6.2 GB
+
+  storeys     1  (wall_seg + splat union (analysis covers 100% of the sheet))
+     0: floor +1.90  ceiling +3.90  height 2.00 m
+
+--- storey 0: colour ortho plate ---
+  tiles      16
+  storey     0 of 1   (wall_seg + splat union (analysis covers 100% of the sheet))
+  extent     x -13.65..6.69  y -15.43..8.45 m
+  cut        z 1.70 .. 3.65 m  (ground 1.90, ceiling 3.90)
+  raster     1425 x 1672 px at 70 px/m
+     lod 0: 0 splats
+     lod 1: 122,983 splats
+     lod 2: 224,955 splats
+     lod 3: 387,280 splats
+     lod 4: 665,209 splats
+     lod 5: 946,483 splats
+  painted    2,346,910 splats, 13.2% pixel coverage
+  denoised   dropped 0.3% of painted pixels as floaters
+  filled     25.4% coverage after 3 passes
+  wrote      C:\Cinematography\Scouts\House1600s\House1600s_ortho.png
+  wrote      House1600s_ortho.json  (georeference)
+
+--- storey 0: stairs ---
+  grid       82 x 96 cells at 25 cm, 27% populated
+  stairs     0 confirmed, 1 weak candidate(s)
+  weak      spiral at (-3.25, -5.13)  r=0.944
+             climbs 1.91 m over 345 deg, 2.13 m per turn, 11.8 treads/turn
+             0.80 m wide, going 0.69 m at the walk line, ascends counter-clockwise
+  wrote      C:\Cinematography\Scouts\House1600s\House1600s_stairs.json
+  (hand-edit this file to add anything the scan missed -- same shape, drawn the same)
+
+--- walking surface ---
+  grid       170 x 200 cells at 12 cm
+  scanned    28.7% of cells have a floor
+  regions    17 patches where the surface sits above the floor plane
+             (not classified -- stairs are stairs.py's job)
+  wrote      C:\Cinematography\Scouts\House1600s\House1600s_levels.png (+ .json, _height.npy)
+
+--- drafted plan ---
+  grid dirs      0.0 deg, 84.0 deg, 90.0 deg, 174.0 deg
+  walls          49 segments -> 39 consolidated
+  openings       0 doors with swings, 6 windows
+  sheet          20.3 x 23.9 m at 70 px/m
+  wrote          C:\Cinematography\Scouts\House1600s\House1600s_drawn.png   (composite)
+  wrote          C:\Cinematography\Scouts\House1600s\House1600s_drawn_plate.png   (plate only, undimmed)
+  wrote          C:\Cinematography\Scouts\House1600s\House1600s_drawn_lines.png   (linework only, transparent)
+  wrote          C:\Cinematography\Scouts\House1600s\House1600s_drawn.svg  (vector linework over embedded plate)
+
+--- linework only (CAD) ---
+  walls          49
+  openings drawn 9 placements from 4 detected
+  sheet          14.91 x 18.37 m, SVG in real millimetres
+  wrote          C:\Cinematography\Scouts\House1600s\House1600s_plan.svg
+
+--- white-box proxy ---
+  walls          49 of 49 lines
+  openings cut   6 placements from 4 detected
+  floor/ceiling  -0.250 .. 1.871 m  (height 2.12 m)
+  mesh           268 verts, 134 triangles
+  wrote          C:\Cinematography\Scouts\House1600s\House1600s_whitebox.obj
+
+=== ingest clean ===
+
+Next:
+  python tools/ue_splat.py "C:\Cinematography\Scans\House1600s_expOff_2026-08-25\lcc2-result\House1600s_180335_expOff.lcc2"
+  import House1600s_whitebox.obj, place as ALCC2ProxyMesh at uniform scale 100
+  print House1600s_drawn.png for the grip/lighting plot

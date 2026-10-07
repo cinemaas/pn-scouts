@@ -1,0 +1,128 @@
+{
+  "location": "Stevens Estate",
+  "slug": "stevens-estate",
+  "captured_with": "XGRIDS PortalCam, reconstructed in LCC Studio",
+  "reconstructed": "2026-09-15",
+  "coordinate_system": {
+    "units": "metres",
+    "up_axis": "Z",
+    "handedness": "right",
+    "origin": "Where the operator stood at the start of the capture walk. Not a building corner and not a geographic datum.",
+    "georeferenced": false
+  },
+  "storeys": [
+    {
+      "index": 0,
+      "floor_m": -0.9,
+      "ceiling_m": 2.2,
+      "height_m": 3.1
+    },
+    {
+      "index": 1,
+      "floor_m": 2.2,
+      "ceiling_m": 5.5,
+      "height_m": 3.3
+    }
+  ],
+  "extent": {
+    "x_min_m": -7.69,
+    "x_max_m": 30.1,
+    "y_min_m": -5.75,
+    "y_max_m": 25.62,
+    "width_m": 37.79,
+    "depth_m": 31.37
+  },
+  "splats": {
+    "full_detail_level0": 15913943,
+    "lod_levels": [
+      15913943,
+      7943215,
+      3970270,
+      1984301,
+      991768,
+      495751
+    ]
+  },
+  "walls": {
+    "format": "2D segments in the X/Y plane; height comes from walls/line_limit_z.json (z_ground, z_ceiling).",
+    "openings": "walls/window_door_candidate_list.json gives doors and windows positioned along those segments."
+  },
+  "files": {
+    "plan.svg": {
+      "bytes": 17456,
+      "what": "Drafted wall linework. SVG user units are real millimetres."
+    },
+    "drawn.svg": {
+      "bytes": 1627784,
+      "what": "The same linework over the colour ortho plate."
+    },
+    "whitebox.obj": {
+      "bytes": 27960,
+      "what": "Wall/floor/ceiling proxy solid, metres, Z up. Openings cut."
+    },
+    "levels.json": {
+      "bytes": 6521,
+      "what": "Walking-surface height map and storey model."
+    },
+    "ingest_report.txt": {
+      "bytes": 6426,
+      "what": "Everything the ingest measured, in full."
+    },
+    "ortho.png": {
+      "bytes": 4884383,
+      "what": "Georeferenced top-down colour plate."
+    },
+    "ortho.json": {
+      "bytes": 251,
+      "what": "Georeference for ortho.png: world extent and pixels per metre."
+    },
+    "stairs_L0.json": {
+      "bytes": 1116,
+      "what": "Detected stair geometry: rise, going, width, direction."
+    },
+    "stairs_L1.json": {
+      "bytes": 2226,
+      "what": "Detected stair geometry: rise, going, width, direction."
+    },
+    "walls\\line_result_list.json": {
+      "bytes": 71421,
+      "what": "Wall segments, 2D in the X/Y plane."
+    },
+    "walls\\line_candidate_list.json": {
+      "bytes": 162513,
+      "what": "Candidate wall segments before consolidation."
+    },
+    "walls\\window_door_candidate_list.json": {
+      "bytes": 4031,
+      "what": "Door and window openings along the walls."
+    },
+    "walls\\line_limit_z.json": {
+      "bytes": 139,
+      "what": "Floor and ceiling heights (z_ground, z_ceiling), metres."
+    },
+    "walls\\main_dirs.json": {
+      "bytes": 81,
+      "what": "Dominant wall directions, degrees."
+    },
+    "walls\\render_param.json": {
+      "bytes": 239,
+      "what": "Sheet extent and scale used for the plan."
+    },
+    "walls\\run_summary.json": {
+      "bytes": 100,
+      "what": "Space-recognition run summary."
+    },
+    "walls\\poses.csv": {
+      "bytes": 976170,
+      "what": "Capture trajectory: timestamp, position (m), orientation quaternion."
+    },
+    "mesh.ply": {
+      "bytes": 4195696,
+      "what": "Reconstructed mesh from LCC Studio, metres, Z up."
+    },
+    "points.ply": {
+      "bytes": 11200362,
+      "what": "Decimated splat centres with colour, metres, Z up. ~200k points."
+    }
+  }
+}
