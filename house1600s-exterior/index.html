@@ -51,6 +51,9 @@
            border-top: 1px solid var(--line); padding-top: var(--s2); }
   .facts dt { color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
   .facts dd { margin: 0; }
+  .slate .data { margin: 0; font: 500 12px/1.4 var(--mono); }
+  .slate .data a { color: var(--acc); text-decoration: none; }
+  .slate .data a:hover, .slate .data a:focus-visible { text-decoration: underline; }
 
   .views { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; padding: var(--s2);
            display: grid; gap: var(--s2); min-width: 184px; }
@@ -125,6 +128,7 @@
     <h1>House 1600s Exterior</h1>
     <p class="sub">Location scout. PortalCam capture, reconstructed 25 Aug 2026.</p>
     <dl class="facts"><dt>Splats</dt><dd>3,265,756 of 13,228,613</dd><dt>Detail</dt><dd>LOD 2, floaters removed, web preview</dd><dt>Storeys</dt><dd>1, floor at +0.09 m</dd><dt>Footprint</dt><dd>78.5 &times; 77.4 m</dd></dl>
+    <p class="data"><a href="data/">&#8595; Measure this scan &mdash; plan, mesh, point cloud, wall data</a></p>
   </header>
 
   <nav class="views panel" aria-label="Viewpoints and movement">
@@ -263,7 +267,7 @@
   function fovFor(mm) { return 2 * Math.atan(SENSOR_W / (2 * mm)) * pc.math.RAD_TO_DEG; }
 
   var VIEWS = {
-    start: function () { setMode("walk"); state.x = 0; state.y = 0; state.z = 0; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; }
+    start: function () { setMode("walk"); state.x = 0; state.y = 0; state.z = 0.09 + EYE; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; }
   };
 
   function pressOnly(selector, attr, value) {
