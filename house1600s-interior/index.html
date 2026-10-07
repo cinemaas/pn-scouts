@@ -267,7 +267,7 @@
   function fovFor(mm) { return 2 * Math.atan(SENSOR_W / (2 * mm)) * pc.math.RAD_TO_DEG; }
 
   var VIEWS = {
-    start: function () { setMode("walk"); state.x = 0; state.y = 0; state.z = -0.25 + EYE; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; }
+    start: function () { setMode("walk"); state.x = -5.06; state.y = 2.45; state.z = 1.11; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; }
   };
 
   function pressOnly(selector, attr, value) {
