@@ -231,7 +231,7 @@
 
   var loaded = 0;
   TILES.forEach(function (name) {
-    var asset = new pc.Asset(name, "gsplat", { url: "tiles/" + name + "/meta.json" });
+    var asset = new pc.Asset(name, "gsplat", { url: name + "/meta.json" });   // <slug>/scan/meta.json, matching make_scout_site.py
     asset.on("load", function () {
       var e = new pc.Entity(name);
       // unified: false -- 2.22 defaults these to the unified renderer, which loaded
