@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paranormal Nobodies — Scan Walk-Throughs</title>
+<meta name="description" content="Browser walk-throughs of the Paranormal Nobodies location scans — move through each scouted location at eye level, with Super 35 lens framing.">
+<meta property="og:title" content="Paranormal Nobodies — Scan Walk-Throughs">
+<meta property="og:description" content="Walk the scouted locations in your browser. Gaussian splat scans from the PortalCam, with lens framing.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cinemaas.github.io/pn-scouts/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0e0f12;
+    --panel: #15171c;
+    --line: #22252d;
+    --line-strong: #353945;
+    --fg: #eceef2;
+    --dim: #8b90a0;
+    --acc: #4d7cfe;
+    --acc-ink: #0e0f12;
+    --sans: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 400 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 20px; display: grid; gap: 10px; }
+  h1 { margin: 0; font: 600 30px/1.05 var(--sans); letter-spacing: 0.09em; text-transform: uppercase; text-wrap: balance; }
+  h1 small { display: block; font: 500 12px/1.4 var(--mono); letter-spacing: 0.14em;
+             color: var(--dim); text-transform: uppercase; margin-top: 8px; }
+  .lede { margin: 0; max-width: 62ch; color: var(--dim); }
+  .lede b { color: var(--fg); font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+          gap: 14px; margin-top: 24px; }
+  .scan { display: grid; gap: 12px; padding: 18px; background: var(--panel);
+          border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: inherit;
+          transition: border-color 140ms ease, transform 140ms ease; }
+  .scan:hover, .scan:focus-visible { border-color: var(--acc); transform: translateY(-2px); }
+  .scan:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+  .scan h2 { margin: 0; font: 600 19px/1.15 var(--sans); letter-spacing: 0.02em; }
+  .scan p { margin: 0; color: var(--dim); font-size: 13.5px; }
+  .spec { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 3px;
+          font: 400 11px/1.5 var(--mono); font-variant-numeric: tabular-nums;
+          border-top: 1px solid var(--line); padding-top: 11px; }
+  .spec dt { color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .spec dd { margin: 0; }
+  .go { font: 500 12px/1 var(--mono); color: var(--acc); letter-spacing: 0.04em; }
+
+  .note { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line);
+          color: var(--dim); font-size: 13px; max-width: 70ch; display: grid; gap: 9px; }
+  .note b { color: var(--fg); font-weight: 500; }
+  .note a { color: var(--acc); }
+  kbd { font: 500 10px/1 var(--mono); color: var(--fg); border: 1px solid var(--line-strong);
+        border-bottom-width: 2px; border-radius: 3px; padding: 2px 4px; }
+  @media (prefers-reduced-motion: reduce) { .scan { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Paranormal Nobodies<small>Location scans &middot; walk them in your browser</small></h1>
+    <p class="lede">Each location was captured with the <b>XGRIDS PortalCam</b> and reconstructed as a Gaussian splat.
+      Open one and move through it at eye level. The lens strip frames shots on a <b>Super 35</b> sensor, so you can
+      judge coverage before anyone drives out there.</p>
+  </header>
+
+  <div class="grid">
+    <a class="scan" href="https://cinemaas.github.io/stevens-estate-scout/">
+      <h2>Stevens Estate</h2>
+      <p>Two-storey interior. Library, fireplace room, staircases.</p>
+      <dl class="spec">
+        <dt>Splats</dt><dd>3,928,806</dd>
+        <dt>Storeys</dt><dd>2</dd>
+        <dt>Captured</dt><dd>8 Sep 2026</dd>
+      </dl>
+      <span class="go">Walk it &rarr;</span>
+    </a>
+
+    <a class="scan" href="klaypool/">
+      <h2>Klaypool Residence</h2>
+      <p>Three levels including the silo. The pilot&rsquo;s heaviest set.</p>
+      <dl class="spec">
+        <dt>Splats</dt><dd>2,886,783</dd>
+        <dt>Storeys</dt><dd>3</dd>
+        <dt>Captured</dt><dd>25 Aug 2026</dd>
+      </dl>
+      <span class="go">Walk it &rarr;</span>
+    </a>
+
+    <a class="scan" href="house1600s-interior/">
+      <h2>House 1600s Interior</h2>
+      <p>Full detail &mdash; the entire scan fits in the browser, nothing reduced.</p>
+      <dl class="spec">
+        <dt>Splats</dt><dd>3,297,231</dd>
+        <dt>Storeys</dt><dd>1</dd>
+        <dt>Captured</dt><dd>24 Aug 2026</dd>
+      </dl>
+      <span class="go">Walk it &rarr;</span>
+    </a>
+
+    <a class="scan" href="house1600s-exterior/">
+      <h2>House 1600s Exterior</h2>
+      <p>Approach, elevations and grounds.</p>
+      <dl class="spec">
+        <dt>Splats</dt><dd>3,265,756</dd>
+        <dt>Storeys</dt><dd>1</dd>
+        <dt>Captured</dt><dd>25 Aug 2026</dd>
+      </dl>
+      <span class="go">Walk it &rarr;</span>
+    </a>
+
+    <a class="scan" href="eustis-exterior/">
+      <h2>Eustis Exterior</h2>
+      <p>Wide exterior sweep of the house and its approach.</p>
+      <dl class="spec">
+        <dt>Splats</dt><dd>2,463,787</dd>
+        <dt>Storeys</dt><dd>1</dd>
+        <dt>Captured</dt><dd>26 Aug 2026</dd>
+      </dl>
+      <span class="go">Walk it &rarr;</span>
+    </a>
+  </div>
+
+  <div class="note">
+    <p><b>Moving around:</b> drag to look, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk,
+      <kbd>Shift</kbd> to hurry. On a phone, drag to look and pinch to walk. Switch to <b>Fly</b> to leave the floor.</p>
+    <p><b>These are previews.</b> Each one loads 30&ndash;50&nbsp;MB, so give it a moment on a phone.
+      Full-resolution scans stay in Unreal for VCam scouting &mdash; up to 15.9&nbsp;M splats against the ~3&nbsp;M here.</p>
+    <p>Locations on a map: <a href="https://cinemaas.github.io/pn-location-map/">Location Scout Map</a>.</p>
+  </div>
+</div>
+</body>
+</html>

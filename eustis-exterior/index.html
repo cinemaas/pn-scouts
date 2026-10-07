@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eustis Exterior</title>
+<meta name="description" content="Walk-through of the Eustis Exterior Gaussian splat scan, with Super 35 lens framing for scouting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0e0f12;
+    --panel: rgba(14, 15, 18, 0.78);
+    --line: #22252d;
+    --line-strong: #353945;
+    --fg: #eceef2;
+    --dim: #8b90a0;
+    --acc: #4d7cfe;
+    --acc-ink: #0e0f12;
+    --warn: #e0b341;
+    --bad: #e0574d;
+    --sans: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+    --t-xs: 11px; --t-sm: 13px; --t-md: 15px; --t-lg: 22px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); }
+  body { font: 400 var(--t-md)/1.4 var(--sans); -webkit-font-smoothing: antialiased; }
+
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
+  #scene.dragging { cursor: grabbing; }
+
+  .hud { position: fixed; inset: 0; pointer-events: none; display: grid;
+         grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 1fr auto;
+         gap: var(--s3); padding: var(--s4); }
+  .hud > * { pointer-events: auto; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+  /* Slate: reads like the head of a camera report */
+  .slate { grid-column: 1; grid-row: 1; justify-self: start; max-width: 42ch; padding: var(--s3) var(--s4);
+           display: grid; gap: var(--s2); }
+  .slate h1 { margin: 0; font: 600 var(--t-lg)/1.05 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; text-wrap: balance; }
+  .slate .sub { margin: 0; color: var(--dim); font-size: var(--t-sm); }
+  .facts { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: var(--s3); row-gap: 2px;
+           font: 400 var(--t-xs)/1.5 var(--mono); font-variant-numeric: tabular-nums;
+           border-top: 1px solid var(--line); padding-top: var(--s2); }
+  .facts dt { color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .facts dd { margin: 0; }
+
+  .views { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; padding: var(--s2);
+           display: grid; gap: var(--s2); min-width: 184px; }
+  .group-label { font: 500 var(--t-xs)/1 var(--sans); color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; padding: 2px var(--s1) 0; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line); border-radius: 4px; padding: 2px; }
+
+  button { font: 500 var(--t-sm)/1.2 var(--sans); color: var(--fg); background: transparent; border: 0;
+           border-radius: 4px; padding: var(--s2) var(--s3); cursor: pointer; text-align: left; }
+  button:hover { background: rgba(236, 238, 242, 0.07); }
+  button:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+  button[aria-pressed="true"] { background: var(--acc); color: var(--acc-ink); }
+  .seg button { text-align: center; padding: 6px var(--s2); }
+  .view-btn { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--s3); }
+  .view-btn small { font: 400 var(--t-xs)/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+  .view-btn[aria-pressed="true"] small { color: var(--acc-ink); opacity: 0.72; }
+
+  .bottom { grid-column: 1 / -1; grid-row: 3; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: end; gap: var(--s3); }
+
+  .readout { padding: var(--s2) var(--s3); font: 400 var(--t-xs)/1.5 var(--mono); font-variant-numeric: tabular-nums;
+             display: grid; grid-template-columns: repeat(2, auto); column-gap: var(--s4); }
+  .readout span { color: var(--dim); }
+  .readout b { font-weight: 500; }
+
+  .lens { justify-self: center; padding: var(--s2); display: grid; gap: var(--s2); max-width: 100%; }
+  .lens-row { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .lens-row::-webkit-scrollbar { display: none; }
+  .lens-row button { font: 500 var(--t-sm)/1 var(--mono); padding: var(--s2) 10px; text-align: center; flex: 0 0 auto;
+                     font-variant-numeric: tabular-nums; }
+  .lens-meta { display: flex; justify-content: space-between; gap: var(--s4); padding: 0 var(--s1);
+               font: 400 var(--t-xs)/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+  .lens-meta b { color: var(--fg); font-weight: 500; }
+
+  .hint { padding: var(--s2) var(--s3); font-size: var(--t-xs); color: var(--dim); max-width: 26ch; line-height: 1.5; }
+  .hint kbd { font: 500 10px/1 var(--mono); color: var(--fg); border: 1px solid var(--line-strong); border-bottom-width: 2px;
+              border-radius: 3px; padding: 2px 4px; }
+  .touch-only { display: none; }
+  @media (pointer: coarse) { .touch-only { display: block; } .mouse-only { display: none; } }
+
+  .loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, 84vw);
+             padding: var(--s4); display: grid; gap: var(--s3); pointer-events: none; }
+  .loading.docked { top: auto; bottom: 108px; transform: translateX(-50%); padding: var(--s2) var(--s3); gap: var(--s2); }
+  .loading[hidden] { display: none; }
+  .loading p { margin: 0; font-size: var(--t-sm); display: flex; justify-content: space-between; gap: var(--s3); }
+  .loading p span:last-child { font: 400 var(--t-xs)/1.6 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+  .bar { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--warn); transition: width 240ms ease; }
+  .loading.error { border-color: var(--bad); pointer-events: auto; }
+  .loading.error .bar i { background: var(--bad); }
+
+  @media (max-width: 720px) {
+    .hud { grid-template-columns: 1fr; padding: var(--s2); gap: var(--s2); }
+    .slate { max-width: none; justify-self: stretch; padding: var(--s2) var(--s3); }
+    .slate h1 { font-size: 18px; }
+    .facts { display: none; }
+    .views { grid-column: 1; grid-row: 2; justify-self: end; align-self: start; min-width: 0; }
+    .views .view-btn small { display: none; }
+    .bottom { grid-template-columns: 1fr; }
+    .readout, .hint { display: none; }
+    .lens { justify-self: stretch; }
+    .loading.docked { bottom: 96px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+
+<canvas id="scene" tabindex="0" aria-label="3D walk-through of the Eustis Exterior scan. Drag to look around; use W A S D or the arrow keys to move."></canvas>
+
+<div class="hud">
+  <header class="slate panel">
+    <h1>Eustis Exterior</h1>
+    <p class="sub">Location scout. PortalCam capture, reconstructed 26 Aug 2026.</p>
+    <dl class="facts"><dt>Splats</dt><dd>2,463,787 of 10,062,720</dd><dt>Detail</dt><dd>LOD 2, floaters removed, web preview</dd><dt>Storeys</dt><dd>1, floor at +0.15 m</dd><dt>Footprint</dt><dd>155.9 &times; 148.2 m</dd></dl>
+  </header>
+
+  <nav class="views panel" aria-label="Viewpoints and movement">
+    <div class="group-label">Viewpoint</div>
+    <button class="view-btn" data-view="start" aria-pressed="true">Capture start <small>eye level</small></button>
+    <div class="group-label">Movement</div>
+    <div class="seg" role="group" aria-label="Movement mode">
+      <button data-mode="walk" aria-pressed="true">Walk</button>
+      <button data-mode="fly" aria-pressed="false">Fly</button>
+    </div>
+  </nav>
+
+  <div class="bottom">
+    <div class="readout panel" aria-live="off">
+      <span>Position</span><b id="ro-pos">0.0, 0.0 m</b>
+      <span>Eye height</span><b id="ro-h">1.60 m</b>
+      <span>Heading</span><b id="ro-hdg">048&deg;</b>
+      <span>Storey</span><b id="ro-storey">Ground</b>
+    </div>
+
+    <div class="lens panel">
+      <div class="lens-row" role="group" aria-label="Lens focal length">
+        <button data-mm="18" aria-pressed="false">18</button>
+        <button data-mm="24" aria-pressed="true">24</button>
+        <button data-mm="32" aria-pressed="false">32</button>
+        <button data-mm="40" aria-pressed="false">40</button>
+        <button data-mm="50" aria-pressed="false">50</button>
+        <button data-mm="65" aria-pressed="false">65</button>
+        <button data-mm="85" aria-pressed="false">85</button>
+      </div>
+      <div class="lens-meta"><span><b id="lens-mm">24 mm</b> on Super 35</span><span>H <b id="lens-fov">58.8&deg;</b></span></div>
+    </div>
+
+    <div class="hint panel">
+      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
+      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways.</div>
+    </div>
+  </div>
+</div>
+
+<div class="loading panel" id="loading" role="status">
+  <p><span id="load-msg">Loading the scan</span><span id="load-count">30 MB</span></p>
+  <div class="bar"><i id="load-bar"></i></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/playcanvas@2.22.2/build/playcanvas.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Scan frame is the LCC export: metres, Z up, origin where the capture walk began.
+  // ONE merged splat, not LCC's overlapping tiles. Separate gsplat instances are
+  // each depth-sorted on their own, so a room behind a wall drawn after the wall's
+  // tile shows straight through it. Built with splat-transform: LCC LOD 2,
+  // NaN and floater filtering, SH bands dropped to fit. Served as unbundled SOG.
+  var TILES = ["scan"];
+  var SENSOR_W = 27.03;                       // Super 35 16:9, mm (RED Gemini 5K)
+  var EYE = 1.6;
+  var FLOORS = [{ n: "Ground", z: 0.15 }];
+  var CENTRE = { x: -18.72, y: -23.71 };
+
+  var loadEl = document.getElementById("loading");
+  var loadMsg = document.getElementById("load-msg");
+  var loadCount = document.getElementById("load-count");
+  var loadBar = document.getElementById("load-bar");
+
+  function fail(message) {
+    loadEl.hidden = false;
+    loadEl.classList.remove("docked");
+    loadEl.classList.add("error");
+    loadMsg.textContent = message;
+    loadCount.textContent = "";
+    loadBar.style.width = "100%";
+  }
+
+  if (!window.pc) { fail("The 3D engine did not load. Check the connection and reload the page."); return; }
+
+  var canvas = document.getElementById("scene");
+  var app;
+  try {
+    app = new pc.Application(canvas, { graphicsDeviceOptions: { antialias: false, alpha: false } });
+  } catch (err) {
+    fail("This browser could not start WebGL, which the walk-through needs. Try a current Chrome, Safari or Edge.");
+    return;
+  }
+  app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+  app.setCanvasResolution(pc.RESOLUTION_AUTO);
+  app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+  window.addEventListener("resize", function () { app.resizeCanvas(); });
+
+  var cam = new pc.Entity("camera");
+  cam.addComponent("camera", {
+    clearColor: new pc.Color(14 / 255, 15 / 255, 18 / 255),
+    nearClip: 0.05, farClip: 500, horizontalFov: true, fov: fovFor(24)
+  });
+  app.root.addChild(cam);
+
+  // splat-transform already rewrote the LCC frame as (x, -z, y) -- measured: its y
+  // spans 11.8 m with median -2.08 where the source z median is +2.58. A 180 deg X
+  // turn lands that on world (x, z, -y), the frame the camera code below assumes.
+  var scan = new pc.Entity("scan");
+  scan.setEulerAngles(180, 0, 0);
+  app.root.addChild(scan);
+
+  var loaded = 0;
+  TILES.forEach(function (name) {
+    var asset = new pc.Asset(name, "gsplat", { url: "tiles/" + name + "/meta.json" });
+    asset.on("load", function () {
+      var e = new pc.Entity(name);
+      // unified: false -- 2.22 defaults these to the unified renderer, which loaded
+      // all four resources and then drew nothing (no render instance was created).
+      e.addComponent("gsplat", { asset: asset, unified: false });
+      scan.addChild(e);
+      loaded += 1;
+      loadCount.textContent = "30 MB";
+      loadBar.style.width = (100 * loaded / TILES.length) + "%";
+      if (loaded === TILES.length) { loadEl.hidden = true; }
+    });
+    asset.on("error", function () { fail("Part of the scan (" + name + ") failed to download. Reload the page to try again."); });
+    app.assets.add(asset);
+    app.assets.load(asset);
+  });
+
+  // ---- camera state, all in the scan frame ----
+  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk" };
+
+  // Nearest floor at or below the camera. Scans have one to three storeys, so
+  // this is a scan-by-scan list rather than Stevens' hard-coded ground/upper.
+  function floorAt(z) {
+    var f = FLOORS[0];
+    for (var i = 0; i < FLOORS.length; i++) { if (z - EYE >= FLOORS[i].z - 0.6) f = FLOORS[i]; }
+    return f;
+  }
+
+  function headingTo(tx, ty) { return Math.atan2(-(tx - state.x), ty - state.y) * pc.math.RAD_TO_DEG; }
+  function fovFor(mm) { return 2 * Math.atan(SENSOR_W / (2 * mm)) * pc.math.RAD_TO_DEG; }
+
+  var VIEWS = {
+    start: function () { setMode("walk"); state.x = 0; state.y = 0; state.z = 0; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; }
+  };
+
+  function pressOnly(selector, attr, value) {
+    document.querySelectorAll(selector).forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute(attr) === value)); });
+  }
+  function setMode(mode) { state.mode = mode; pressOnly("[data-mode]", "data-mode", mode); }
+
+  document.querySelectorAll("[data-view]").forEach(function (b) {
+    b.addEventListener("click", function () { VIEWS[b.dataset.view](); pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus(); });
+  });
+  document.querySelectorAll("[data-mode]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      setMode(b.dataset.mode);
+      if (b.dataset.mode === "walk") { state.z = floorAt(state.z).z + EYE; }
+      canvas.focus();
+    });
+  });
+  document.querySelectorAll("[data-mm]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var mm = Number(b.dataset.mm), fov = fovFor(mm);
+      cam.camera.fov = fov;
+      pressOnly("[data-mm]", "data-mm", b.dataset.mm);
+      document.getElementById("lens-mm").textContent = mm + " mm";
+      document.getElementById("lens-fov").textContent = fov.toFixed(1) + "°";
+    });
+  });
+
+  // ---- input ----
+  var keys = {};
+  window.addEventListener("keydown", function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    keys[e.code] = true;
+    if (/^(Arrow|Space)/.test(e.code) && document.activeElement === canvas) e.preventDefault();
+  });
+  window.addEventListener("keyup", function (e) { keys[e.code] = false; });
+  window.addEventListener("blur", function () { keys = {}; });
+
+  var pointers = new Map(), pinchPrev = null;
+  function mid() { var a = Array.from(pointers.values()); return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) }; }
+
+  canvas.addEventListener("pointerdown", function (e) {
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    canvas.classList.add("dragging");
+    pinchPrev = pointers.size === 2 ? mid() : null;
+  });
+  canvas.addEventListener("pointermove", function (e) {
+    var p = pointers.get(e.pointerId);
+    if (!p) return;
+    if (pointers.size === 1) {
+      state.yaw -= (e.clientX - p.x) * 0.18;
+      state.pitch = pc.math.clamp(state.pitch - (e.clientY - p.y) * 0.18, -89, 89);
+    }
+    p.x = e.clientX; p.y = e.clientY;
+    if (pointers.size === 2) {
+      var m = mid();
+      if (pinchPrev) {
+        move((m.d - pinchPrev.d) * 0.012, 0, 0);
+        move(0, -(m.x - pinchPrev.x) * 0.01, 0);
+      }
+      pinchPrev = m;
+    }
+  });
+  function endPointer(e) {
+    pointers.delete(e.pointerId);
+    pinchPrev = pointers.size === 2 ? mid() : null;
+    if (!pointers.size) canvas.classList.remove("dragging");
+  }
+  canvas.addEventListener("pointerup", endPointer);
+  canvas.addEventListener("pointercancel", endPointer);
+  canvas.addEventListener("wheel", function (e) { e.preventDefault(); move(-e.deltaY * 0.004, 0, 0); }, { passive: false });
+
+  // forward, right, up in metres
+  function move(fwd, right, up) {
+    var yaw = state.yaw * pc.math.DEG_TO_RAD;
+    var fx = -Math.sin(yaw), fy = Math.cos(yaw);
+    var rx = Math.cos(yaw), ry = Math.sin(yaw);
+    if (state.mode === "fly") {
+      var pitch = state.pitch * pc.math.DEG_TO_RAD;
+      state.x += fx * Math.cos(pitch) * fwd + rx * right;
+      state.y += fy * Math.cos(pitch) * fwd + ry * right;
+      state.z += Math.sin(pitch) * fwd + up;
+    } else {
+      state.x += fx * fwd + rx * right;
+      state.y += fy * fwd + ry * right;
+    }
+  }
+
+  // ---- frame ----
+  var roPos = document.getElementById("ro-pos"), roH = document.getElementById("ro-h"),
+      roHdg = document.getElementById("ro-hdg"), roStorey = document.getElementById("ro-storey");
+  var hudTimer = 0;
+
+  app.on("update", function (dt) {
+    var speed = (state.mode === "fly" ? 3.0 : 1.4) * ((keys.ShiftLeft || keys.ShiftRight) ? 3 : 1) * dt;
+    var f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+    var r = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+    var u = state.mode === "fly" ? (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0) : 0;
+    if (f || r || u) move(f * speed, r * speed, u * speed);
+
+    cam.setPosition(state.x, state.z, -state.y);
+    cam.setEulerAngles(state.pitch, state.yaw, 0);
+
+    hudTimer += dt;
+    if (hudTimer > 0.1) {
+      hudTimer = 0;
+      var storey = floorAt(state.z);
+      var hdg = ((-state.yaw % 360) + 360) % 360;
+      roPos.textContent = state.x.toFixed(1) + ", " + state.y.toFixed(1) + " m";
+      roH.textContent = (state.z - storey.z).toFixed(2) + " m";
+      roHdg.textContent = String(Math.round(hdg)).padStart(3, "0") + "°";
+      roStorey.textContent = storey.n;
+    }
+  });
+
+  VIEWS[Object.keys(VIEWS)[0]]();
+  app.start();
+  canvas.focus();
+})();
+</script>
+
+</body>
+</html>
