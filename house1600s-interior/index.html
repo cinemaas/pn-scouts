@@ -84,6 +84,11 @@
   .lens-row::-webkit-scrollbar { display: none; }
   .lens-row button { font: 500 var(--t-sm)/1 var(--mono); padding: var(--s2) 10px; text-align: center; flex: 0 0 auto;
                      font-variant-numeric: tabular-nums; }
+  .lens-actions { display: flex; justify-content: center; }
+  .lens-actions button { font: 500 var(--t-sm)/1 var(--sans); letter-spacing: .06em;
+                         text-transform: uppercase; padding: 7px 18px; background: var(--acc);
+                         color: var(--acc-ink); border-radius: 4px; }
+  .lens-actions button:hover { filter: brightness(1.08); background: var(--acc); }
   .lens-meta { display: flex; justify-content: space-between; gap: var(--s4); padding: 0 var(--s1);
                font: 400 var(--t-xs)/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
   .lens-meta b { color: var(--fg); font-weight: 500; }
@@ -166,11 +171,12 @@
         <button data-mm="65" aria-pressed="false">65</button>
         <button data-mm="85" aria-pressed="false">85</button>
       </div>
+      <div class="lens-actions"><button data-photo type="button" title="Save a still (P)">Photo</button></div>
       <div class="lens-meta"><span><b id="lens-mm">24 mm</b> on Super 35</span><span>H <b id="lens-fov">58.8&deg;</b></span></div>
     </div>
 
     <div class="hint panel">
-      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
+      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. <kbd>P</kbd> saves a still. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
       <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster.</div>
     </div>
   </div>
@@ -216,7 +222,7 @@
   var canvas = document.getElementById("scene");
   var app;
   try {
-    app = new pc.Application(canvas, { graphicsDeviceOptions: { antialias: false, alpha: false } });
+    app = new pc.Application(canvas, { graphicsDeviceOptions: { antialias: false, alpha: false, preserveDrawingBuffer: true } });
   } catch (err) {
     fail("This browser could not start WebGL, which the walk-through needs. Try a current Chrome, Safari or Edge.");
     return;
@@ -260,6 +266,8 @@
   });
 
   // ---- camera state, all in the scan frame ----
+  var TITLE = document.querySelector("h1").textContent;
+  var currentMM = 24;
   var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1 };
 
   // Nearest floor at or below the camera. Scans have one to three storeys, so
@@ -303,6 +311,7 @@
   document.querySelectorAll("[data-mm]").forEach(function (b) {
     b.addEventListener("click", function () {
       var mm = Number(b.dataset.mm), fov = fovFor(mm);
+      currentMM = mm;
       cam.camera.fov = fov;
       pressOnly("[data-mm]", "data-mm", b.dataset.mm);
       document.getElementById("lens-mm").textContent = mm + " mm";
@@ -315,6 +324,7 @@
   window.addEventListener("keydown", function (e) {
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     keys[e.code] = true;
+    if (e.code === "KeyP") { takePhoto(); }
     if (/^(Arrow|Space)/.test(e.code) && document.activeElement === canvas) e.preventDefault();
   });
   window.addEventListener("keyup", function (e) { keys[e.code] = false; });
@@ -370,6 +380,51 @@
       state.y += fy * fwd + ry * right;
     }
   }
+
+
+  // ---- stills ----
+  // The canvas is cleared after each present unless preserveDrawingBuffer is set,
+  // so without it toBlob returns an empty image on most machines.
+  function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+
+  function takePhoto() {
+    var w = canvas.width, h = canvas.height, bar = Math.max(44, Math.round(h * 0.055));
+    var out = document.createElement("canvas");
+    out.width = w; out.height = h + bar;
+    var g = out.getContext("2d");
+    g.drawImage(canvas, 0, 0);
+    g.fillStyle = "#0e0f12";
+    g.fillRect(0, h, w, bar);
+    var pad = Math.round(bar * 0.42), size = Math.round(bar * 0.34);
+    g.fillStyle = "#eceef2";
+    g.font = "500 " + size + "px 'IBM Plex Sans Condensed', system-ui, sans-serif";
+    g.textBaseline = "middle";
+    g.fillText(TITLE.toUpperCase(), pad, h + bar / 2);
+
+    var storey = floorAt(state.z);
+    var hdg = String(Math.round(((-state.yaw % 360) + 360) % 360)).padStart(3, "0");
+    var right = currentMM + " mm · H " + fovFor(currentMM).toFixed(1) + "° · " +
+                state.x.toFixed(1) + ", " + state.y.toFixed(1) + " m · eye " +
+                (state.z - storey.z).toFixed(2) + " m · " + hdg + "° · " + storey.n;
+    g.fillStyle = "#8b90a0";
+    g.font = "400 " + Math.round(size * 0.92) + "px 'IBM Plex Mono', monospace";
+    g.fillText(right, w - g.measureText(right).width - pad, h + bar / 2);
+
+    out.toBlob(function (blob) {
+      if (!blob) { return; }
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = slug(TITLE) + "_" + currentMM + "mm_" +
+                   state.x.toFixed(1) + "_" + state.y.toFixed(1) + ".png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      shot.textContent = "Saved";
+      setTimeout(function () { shot.textContent = "Photo"; }, 1400);
+    }, "image/png");
+  }
+
+  var shot = document.querySelector("[data-photo]");
+  shot.addEventListener("click", takePhoto);
 
   // ---- frame ----
   var roPos = document.getElementById("ro-pos"), roH = document.getElementById("ro-h"),
