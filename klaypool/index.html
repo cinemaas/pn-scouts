@@ -184,8 +184,8 @@
     </div>
 
     <div class="hint panel">
-      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. <kbd>P</kbd> saves a still. <kbd>F</kbd> hides the 1.75 m figure, <kbd>G</kbd> moves it to you. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
-      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster, and <b>Place</b> to move the 1.75 m figure to where you stand.</div>
+      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. <kbd>P</kbd> saves a still. <kbd>F</kbd> hides the 1.75 m figure, <kbd>G</kbd> drops it 2 m ahead. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
+      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster, and <b>Place</b> to drop the 1.75 m figure a couple of metres ahead of you.</div>
     </div>
   </div>
 </div>
@@ -400,13 +400,26 @@
   // A 1.75 m stand-in, built from primitives so the page ships no model file.
   // Judging a ceiling height or a doorway from a splat alone is guesswork; a
   // figure of known height in the shot settles it.
+  var FIGURE_AT = { x: -2.48, y: 3.54 };   // a pose from the capture track: free space by construction
   var FIGURE_H = 1.75;
+
+  // The scene ships no lights -- splats carry their own baked colour. A lit
+  // material with nothing lighting it renders black, so the figure gets its own
+  // sun and fill. Splat rendering ignores both.
+  app.scene.ambientLight = new pc.Color(0.42, 0.43, 0.47);
+  (function () {
+    var sun = new pc.Entity("figure-sun");
+    sun.addComponent("light", { type: "directional", color: new pc.Color(1.0, 0.97, 0.92),
+                                intensity: 1.7, castShadows: false });
+    sun.setEulerAngles(54, 36, 0);
+    app.root.addChild(sun);
+  })();
 
   function buildFigure() {
     var root = new pc.Entity("figure");
     var mat = new pc.StandardMaterial();
     mat.diffuse = new pc.Color(0.92, 0.60, 0.22);
-    mat.emissive = new pc.Color(0.16, 0.09, 0.02);
+    mat.emissive = new pc.Color(0.22, 0.12, 0.04);   // never fully black in shadow
     mat.useMetalness = false;
     mat.update();
 
@@ -429,12 +442,19 @@
 
   var figure = buildFigure();
 
+  // Heading that turns the figure at scan point p back toward the viewer.
+  function facingViewer(px, py) {
+    return Math.atan2(-(state.x - px), state.y - py) * pc.math.RAD_TO_DEG;
+  }
+
+  // Dropped 2 m ahead, not underfoot: standing it on your own position puts the
+  // camera inside its chest and fills the screen with one brown polygon.
   function placeFigure() {
     var f = floorAt(state.z);
     var yaw = state.yaw * pc.math.DEG_TO_RAD;
-    var ahead = 0.0;
-    figure.setPosition(state.x - Math.sin(yaw) * ahead, f.z, -(state.y + Math.cos(yaw) * ahead));
-    figure.setEulerAngles(0, state.yaw + 180, 0);
+    var px = state.x - Math.sin(yaw) * 2.0, py = state.y + Math.cos(yaw) * 2.0;
+    figure.setPosition(px, f.z, -py);
+    figure.setEulerAngles(0, facingViewer(px, py), 0);
   }
 
   function showFigure(on) {
@@ -525,8 +545,9 @@
   VIEWS[Object.keys(VIEWS)[0]]();
   (function () {
     var f = floorAt(state.z), yaw = state.yaw * pc.math.DEG_TO_RAD;
-    figure.setPosition(state.x - Math.sin(yaw) * 4, f.z, -(state.y + Math.cos(yaw) * 4));
-    figure.setEulerAngles(0, state.yaw + 180, 0);
+    var p = FIGURE_AT || { x: state.x - Math.sin(yaw) * 2.5, y: state.y + Math.cos(yaw) * 2.5 };
+    figure.setPosition(p.x, f.z, -p.y);
+    figure.setEulerAngles(0, facingViewer(p.x, p.y), 0);
   })();
   app.start();
   canvas.focus();
