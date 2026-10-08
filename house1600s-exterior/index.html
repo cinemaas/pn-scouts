@@ -58,6 +58,7 @@
   .views { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; padding: var(--s2);
            display: grid; gap: var(--s2); min-width: 184px; }
   .group-label { font: 500 var(--t-xs)/1 var(--sans); color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; padding: 2px var(--s1) 0; }
+  .seg3 { grid-template-columns: repeat(3, 1fr); }
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line); border-radius: 4px; padding: 2px; }
 
   button { font: 500 var(--t-sm)/1.2 var(--sans); color: var(--fg); background: transparent; border: 0;
@@ -139,6 +140,12 @@
       <button data-mode="walk" aria-pressed="true">Walk</button>
       <button data-mode="fly" aria-pressed="false">Fly</button>
     </div>
+    <div class="group-label">Speed</div>
+    <div class="seg seg3" role="group" aria-label="Movement speed">
+      <button data-speed="0.4" aria-pressed="false">Slow</button>
+      <button data-speed="1" aria-pressed="true">Normal</button>
+      <button data-speed="3" aria-pressed="false">Fast</button>
+    </div>
   </nav>
 
   <div class="bottom">
@@ -164,7 +171,7 @@
 
     <div class="hint panel">
       <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
-      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways.</div>
+      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster.</div>
     </div>
   </div>
 </div>
@@ -253,7 +260,7 @@
   });
 
   // ---- camera state, all in the scan frame ----
-  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk" };
+  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1 };
 
   // Nearest floor at or below the camera. Scans have one to three storeys, so
   // this is a scan-by-scan list rather than Stevens' hard-coded ground/upper.
@@ -285,6 +292,14 @@
       canvas.focus();
     });
   });
+  document.querySelectorAll("[data-speed]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      state.speed = Number(b.dataset.speed);
+      pressOnly("[data-speed]", "data-speed", b.dataset.speed);
+      canvas.focus();
+    });
+  });
+
   document.querySelectorAll("[data-mm]").forEach(function (b) {
     b.addEventListener("click", function () {
       var mm = Number(b.dataset.mm), fov = fovFor(mm);
@@ -362,7 +377,7 @@
   var hudTimer = 0;
 
   app.on("update", function (dt) {
-    var speed = (state.mode === "fly" ? 3.0 : 1.4) * ((keys.ShiftLeft || keys.ShiftRight) ? 3 : 1) * dt;
+    var speed = (state.mode === "fly" ? 3.0 : 1.4) * state.speed * ((keys.ShiftLeft || keys.ShiftRight) ? 3 : 1) * dt;
     var f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
     var r = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
     var u = state.mode === "fly" ? (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0) : 0;
