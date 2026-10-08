@@ -154,6 +154,11 @@
       <button data-speed="1" aria-pressed="true">Normal</button>
       <button data-speed="3" aria-pressed="false">Fast</button>
     </div>
+    <div class="group-label">Scale figure</div>
+    <div class="seg" role="group" aria-label="Scale figure">
+      <button data-figure="toggle" aria-pressed="true">Hide</button>
+      <button data-figure="place">Place</button>
+    </div>
   </nav>
 
   <div class="bottom">
@@ -179,8 +184,8 @@
     </div>
 
     <div class="hint panel">
-      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. <kbd>P</kbd> saves a still. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
-      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster.</div>
+      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. <kbd>P</kbd> saves a still. <kbd>F</kbd> hides the 1.75 m figure, <kbd>G</kbd> moves it to you. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
+      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster, and <b>Place</b> to move the 1.75 m figure to where you stand.</div>
     </div>
   </div>
 </div>
@@ -331,6 +336,8 @@
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     keys[e.code] = true;
     if (e.code === "KeyP") { takePhoto(); }
+    if (e.code === "KeyF") { showFigure(!figure.enabled); }
+    if (e.code === "KeyG") { placeFigure(); showFigure(true); }
     if (/^(Arrow|Space)/.test(e.code) && document.activeElement === canvas) e.preventDefault();
   });
   window.addEventListener("keyup", function (e) { keys[e.code] = false; });
@@ -387,6 +394,62 @@
     }
   }
 
+
+
+  // ---- scale figure ----
+  // A 1.75 m stand-in, built from primitives so the page ships no model file.
+  // Judging a ceiling height or a doorway from a splat alone is guesswork; a
+  // figure of known height in the shot settles it.
+  var FIGURE_H = 1.75;
+
+  function buildFigure() {
+    var root = new pc.Entity("figure");
+    var mat = new pc.StandardMaterial();
+    mat.diffuse = new pc.Color(0.92, 0.60, 0.22);
+    mat.emissive = new pc.Color(0.16, 0.09, 0.02);
+    mat.useMetalness = false;
+    mat.update();
+
+    function part(type, px, py, pz, sx, sy, sz) {
+      var e = new pc.Entity();
+      e.addComponent("render", { type: type, material: mat, castShadows: false, receiveShadows: false });
+      e.setLocalPosition(px, py, pz);
+      e.setLocalScale(sx, sy, sz);
+      root.addChild(e);
+    }
+    // metres, origin at the feet
+    part("box", 0, 0.43, 0, 0.34, 0.86, 0.22);          // legs
+    part("box", 0, 1.18, 0, 0.44, 0.64, 0.24);          // torso
+    part("box", -0.27, 1.16, 0, 0.10, 0.60, 0.14);      // arms
+    part("box", 0.27, 1.16, 0, 0.10, 0.60, 0.14);
+    part("sphere", 0, 1.63, 0, 0.24, 0.26, 0.24);       // head -> 1.75 m overall
+    app.root.addChild(root);
+    return root;
+  }
+
+  var figure = buildFigure();
+
+  function placeFigure() {
+    var f = floorAt(state.z);
+    var yaw = state.yaw * pc.math.DEG_TO_RAD;
+    var ahead = 0.0;
+    figure.setPosition(state.x - Math.sin(yaw) * ahead, f.z, -(state.y + Math.cos(yaw) * ahead));
+    figure.setEulerAngles(0, state.yaw + 180, 0);
+  }
+
+  function showFigure(on) {
+    figure.enabled = on;
+    var b = document.querySelector('[data-figure="toggle"]');
+    b.setAttribute("aria-pressed", String(on));
+    b.textContent = on ? "Hide" : "Show";
+  }
+
+  document.querySelector('[data-figure="toggle"]').addEventListener("click", function () {
+    showFigure(!figure.enabled); canvas.focus();
+  });
+  document.querySelector('[data-figure="place"]').addEventListener("click", function () {
+    placeFigure(); showFigure(true); canvas.focus();
+  });
 
   // ---- stills ----
   // The canvas is cleared after each present unless preserveDrawingBuffer is set,
@@ -460,6 +523,11 @@
   });
 
   VIEWS[Object.keys(VIEWS)[0]]();
+  (function () {
+    var f = floorAt(state.z), yaw = state.yaw * pc.math.DEG_TO_RAD;
+    figure.setPosition(state.x - Math.sin(yaw) * 4, f.z, -(state.y + Math.cos(yaw) * 4));
+    figure.setEulerAngles(0, state.yaw + 180, 0);
+  })();
   app.start();
   canvas.focus();
 })();
