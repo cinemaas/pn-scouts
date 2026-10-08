@@ -394,20 +394,17 @@
   // A 1.75 m stand-in, built from primitives so the page ships no model file.
   // Judging a ceiling height or a doorway from a splat alone is guesswork; a
   // figure of known height in the shot settles it.
-  var FIGURE_AT = { x: -1.65, y: -2.14 };   // a pose from the capture track: free space by construction
+  var FIGURE_AT = { x: -3.81, y: -3.26 };   // a pose from the capture track: free space by construction
   var FIGURE_H = 1.75;
 
   // The scene ships no lights -- splats carry their own baked colour. A lit
   // material with nothing lighting it renders black, so the figure gets its own
   // sun and fill. Splat rendering ignores both.
-  app.scene.ambientLight = new pc.Color(0.42, 0.43, 0.47);
-  (function () {
-    var sun = new pc.Entity("figure-sun");
-    sun.addComponent("light", { type: "directional", color: new pc.Color(1.0, 0.97, 0.92),
-                                intensity: 1.7, castShadows: false });
-    sun.setEulerAngles(54, 36, 0);
-    app.root.addChild(sun);
-  })();
+  app.scene.ambientLight = new pc.Color(0.46, 0.47, 0.52);
+  var sun = new pc.Entity("figure-sun");
+  sun.addComponent("light", { type: "directional", color: new pc.Color(1.0, 0.97, 0.92),
+                              intensity: 1.9, castShadows: false });
+  app.root.addChild(sun);
 
   function buildFigure() {
     var root = new pc.Entity("figure");
@@ -424,12 +421,15 @@
       e.setLocalScale(sx, sy, sz);
       root.addChild(e);
     }
-    // metres, origin at the feet
-    part("box", 0, 0.43, 0, 0.34, 0.86, 0.22);          // legs
-    part("box", 0, 1.18, 0, 0.44, 0.64, 0.24);          // torso
-    part("box", -0.27, 1.16, 0, 0.10, 0.60, 0.14);      // arms
-    part("box", 0.27, 1.16, 0, 0.10, 0.60, 0.14);
-    part("sphere", 0, 1.63, 0, 0.24, 0.26, 0.24);       // head -> 1.75 m overall
+    // metres, origin at the feet. Separate legs and a neck, because as one
+    // solid column it read as a totem rather than a person at 4 m.
+    part("box", -0.10, 0.43, 0, 0.15, 0.86, 0.18);      // left leg
+    part("box", 0.10, 0.43, 0, 0.15, 0.86, 0.18);       // right leg
+    part("box", 0, 1.16, 0, 0.40, 0.60, 0.22);          // torso
+    part("box", -0.245, 1.14, 0, 0.09, 0.56, 0.13);     // arms
+    part("box", 0.245, 1.14, 0, 0.09, 0.56, 0.13);
+    part("box", 0, 1.50, 0, 0.11, 0.09, 0.11);          // neck
+    part("sphere", 0, 1.62, 0, 0.22, 0.26, 0.22);       // head -> 1.75 m overall
     app.root.addChild(root);
     return root;
   }
@@ -523,6 +523,9 @@
 
     cam.setPosition(state.x, state.z, -state.y);
     cam.setEulerAngles(state.pitch, state.yaw, 0);
+    // Key light over the viewer's shoulder, so the figure is lit from the front
+    // wherever they stand. A fixed sun left it in its own shadow at Stevens.
+    sun.setEulerAngles(38, state.yaw + 28, 0);
 
     hudTimer += dt;
     if (hudTimer > 0.1) {
