@@ -26,6 +26,7 @@ description of every file in this folder.
 | `walls/run_summary.json` | Space-recognition run summary. (0.1 KB) |
 | `walls/window_door_candidate_list.json` | Door and window openings along the walls. (1.7 KB) |
 | `whitebox.obj` | Wall/floor/ceiling proxy solid, metres, Z up. Openings cut. (9.5 KB) |
+| `mesh.ply` | Reconstructed mesh from LCC Studio, metres, Z up. Merged from LCC's 16 split tiles. (1463.6 KB) |
 
 ## Deriving a plan
 
