@@ -23,6 +23,8 @@
     --bad: #e0574d;
     --sans: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --chrome: #121419;
+    --rail: 208px;
     --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
     --t-xs: 11px; --t-sm: 13px; --t-md: 15px; --t-lg: 22px;
   }
@@ -30,166 +32,298 @@
   html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); }
   body { font: 400 var(--t-md)/1.4 var(--sans); -webkit-font-smoothing: antialiased; }
 
-  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
-  #scene.dragging { cursor: grabbing; }
+  /* --- camera body -------------------------------------------------------
+     Nothing is drawn over the picture. The image has its own gate and every
+     control sits in the chrome around it, the way a viewfinder is laid out:
+     slate above, transport below, controls down the sides. */
+  .rig { position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
 
-  .hud { position: fixed; inset: 0; pointer-events: none; display: grid;
-         grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 1fr auto;
-         gap: var(--s3); padding: var(--s4); }
-  .hud > * { pointer-events: auto; }
+  .bar { display: flex; align-items: center; gap: var(--s4);
+         padding: var(--s2) var(--s4); background: var(--chrome);
+         border-bottom: 1px solid var(--line); }
+  .bar-bot { border-bottom: 0; border-top: 1px solid var(--line); }
 
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
-           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .slate { display: flex; align-items: baseline; gap: var(--s3); min-width: 0; }
+  .slate h1 { margin: 0; font: 600 var(--t-lg)/1 var(--sans); letter-spacing: 0.08em;
+              text-transform: uppercase; white-space: nowrap; }
+  .slate .sub { margin: 0; color: var(--dim); font-size: var(--t-xs);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .data { margin: 0 0 0 auto; font: 500 var(--t-xs)/1 var(--mono); white-space: nowrap; }
+  .bar .data a { color: var(--acc); text-decoration: none; }
+  .bar .data a:hover, .bar .data a:focus-visible { text-decoration: underline; }
 
-  /* Slate: reads like the head of a camera report */
-  .slate { grid-column: 1; grid-row: 1; justify-self: start; max-width: 42ch; padding: var(--s3) var(--s4);
-           display: grid; gap: var(--s2); }
-  .slate h1 { margin: 0; font: 600 var(--t-lg)/1.05 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; text-wrap: balance; }
-  .slate .sub { margin: 0; color: var(--dim); font-size: var(--t-sm); }
-  .facts { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: var(--s3); row-gap: 2px;
-           font: 400 var(--t-xs)/1.5 var(--mono); font-variant-numeric: tabular-nums;
-           border-top: 1px solid var(--line); padding-top: var(--s2); }
-  .facts dt { color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stage { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr) var(--rail); min-height: 0; }
+  .rail { background: var(--chrome); padding: var(--s3); display: grid; gap: var(--s4);
+          align-content: start; overflow: auto; min-width: 0; }
+  .rail-l { border-right: 1px solid var(--line); }
+  .rail-r { border-left: 1px solid var(--line); }
+  .group { display: grid; gap: var(--s2); min-width: 0; align-self: start; align-content: start; }
+  .group-label { font: 500 var(--t-xs)/1 var(--sans); color: var(--dim);
+                 text-transform: uppercase; letter-spacing: 0.12em; }
+
+  .facts { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: var(--s3); row-gap: 3px;
+           font: 400 var(--t-xs)/1.45 var(--mono); font-variant-numeric: tabular-nums; }
+  .facts dt { color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
   .facts dd { margin: 0; }
-  .slate .data { margin: 0; font: 500 12px/1.4 var(--mono); }
-  .slate .data a { color: var(--acc); text-decoration: none; }
-  .slate .data a:hover, .slate .data a:focus-visible { text-decoration: underline; }
 
-  .views { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; padding: var(--s2);
-           display: grid; gap: var(--s2); min-width: 184px; }
-  .group-label { font: 500 var(--t-xs)/1 var(--sans); color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; padding: 2px var(--s1) 0; }
-  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line); border-radius: 4px; padding: 2px; }
+  .viewer { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; background: #06070a; }
+  .finder { display: grid; place-items: center; min-height: 0; padding: var(--s3); overflow: hidden; }
+  .gate { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #05060a; }
+  #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+           touch-action: none; cursor: grab; outline: none; }
+  #scene.dragging { cursor: grabbing; }
+  #scene.pointing { cursor: crosshair; }
+
+  /* viewfinder furniture: corner ticks, centre mark, frame lines */
+  .marks { position: absolute; inset: 0; pointer-events: none; }
+  .marks i { position: absolute; width: 17px; height: 17px; border: 0 solid rgba(236, 238, 242, 0.5); }
+  .marks i:nth-of-type(1) { top: 7px; left: 7px; border-top-width: 2px; border-left-width: 2px; }
+  .marks i:nth-of-type(2) { top: 7px; right: 7px; border-top-width: 2px; border-right-width: 2px; }
+  .marks i:nth-of-type(3) { bottom: 7px; left: 7px; border-bottom-width: 2px; border-left-width: 2px; }
+  .marks i:nth-of-type(4) { bottom: 7px; right: 7px; border-bottom-width: 2px; border-right-width: 2px; }
+  .marks b { position: absolute; left: 50%; top: 50%; width: 13px; height: 1px;
+             margin: -0.5px 0 0 -6.5px; background: rgba(236, 238, 242, 0.45); }
+  .marks b::after { content: ""; position: absolute; left: 6px; top: -6px; width: 1px; height: 13px;
+                    background: rgba(236, 238, 242, 0.45); }
+  /* No transition: a frameline should appear, not slide -- and an animated
+     height reads as 0 until the next animation frame, which on a slow machine
+     made the bands look broken. */
+  .guide { position: absolute; left: 0; right: 0; height: 0; background: rgba(5, 6, 10, 0.78);
+           border: 0 solid rgba(236, 238, 242, 0.38); }
+  .guide.top { top: 0; border-bottom-width: 1px; }
+  .guide.bot { bottom: 0; border-top-width: 1px; }
+
+  .transport { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+               gap: var(--s3); padding: var(--s2) var(--s3);
+               background: var(--chrome); border-top: 1px solid var(--line); }
+  .transport[hidden] { display: none; }
+  .transport .count { font: 400 var(--t-xs)/1 var(--mono); color: var(--dim);
+                      font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .transport .count b { color: var(--fg); font-weight: 500; }
+  input[type="range"] { width: 100%; margin: 0; accent-color: var(--acc); height: 24px; cursor: pointer; }
 
   button { font: 500 var(--t-sm)/1.2 var(--sans); color: var(--fg); background: transparent; border: 0;
            border-radius: 4px; padding: var(--s2) var(--s3); cursor: pointer; text-align: left; }
   button:hover { background: rgba(236, 238, 242, 0.07); }
   button:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
   button[aria-pressed="true"] { background: var(--acc); color: var(--acc-ink); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line);
+         border-radius: 4px; padding: 2px; }
   .seg.seg3 { grid-template-columns: repeat(3, 1fr); }
-  .seg button { text-align: center; padding: 6px var(--s2); }
-  .view-btn { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--s3); }
+  .seg button { text-align: center; padding: 7px var(--s2); }
+  .view-btn { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--s3);
+              background: rgba(236, 238, 242, 0.05); }
   .view-btn small { font: 400 var(--t-xs)/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
   .view-btn[aria-pressed="true"] small { color: var(--acc-ink); opacity: 0.72; }
 
-  .bottom { grid-column: 1 / -1; grid-row: 3; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
-            align-items: end; gap: var(--s3); }
+  /* Hold-to-move pad: big targets, no keyboard and no mouse-look needed */
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+         background: var(--line); border-radius: 4px; padding: 2px; }
+  .pad button { text-align: center; padding: 10px 0 8px; font-size: 16px; line-height: 1;
+                background: rgba(236, 238, 242, 0.05); touch-action: none; }
+  .pad button:active { background: var(--acc); color: var(--acc-ink); }
+  .pad small { display: block; font: 400 9px/1 var(--sans); color: var(--dim);
+               letter-spacing: 0.06em; text-transform: uppercase; margin-top: 4px; }
+  .pad button:active small { color: var(--acc-ink); }
+  .wide { text-align: center; padding: 10px var(--s3); background: rgba(236, 238, 242, 0.05); }
 
-  .readout { padding: var(--s2) var(--s3); font: 400 var(--t-xs)/1.5 var(--mono); font-variant-numeric: tabular-nums;
-             display: grid; grid-template-columns: repeat(2, auto); column-gap: var(--s4); }
+  .readout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px;
+             font: 400 var(--t-xs)/1.5 var(--mono); font-variant-numeric: tabular-nums; }
   .readout span { color: var(--dim); }
+  .readout span:not(:first-child) { margin-left: var(--s3); }
   .readout b { font-weight: 500; }
 
-  .lens { justify-self: center; padding: var(--s2); display: grid; gap: var(--s2); max-width: 100%; }
-  .lens-row { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .lens { display: flex; align-items: center; gap: var(--s3); margin: 0 auto; min-width: 0; }
+  .lens-row { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none;
+              background: var(--line); border-radius: 4px; padding: 2px; }
   .lens-row::-webkit-scrollbar { display: none; }
-  .lens-row button { font: 500 var(--t-sm)/1 var(--mono); padding: var(--s2) 10px; text-align: center; flex: 0 0 auto;
-                     font-variant-numeric: tabular-nums; }
-  .lens-actions { display: flex; justify-content: center; }
+  .lens-row button { font: 500 var(--t-sm)/1 var(--mono); padding: 7px 10px; text-align: center;
+                     flex: 0 0 auto; font-variant-numeric: tabular-nums; }
   .lens-actions button { font: 500 var(--t-sm)/1 var(--sans); letter-spacing: .06em;
-                         text-transform: uppercase; padding: 7px 18px; background: var(--acc);
-                         color: var(--acc-ink); border-radius: 4px; }
+                         text-transform: uppercase; padding: 8px 18px; background: var(--acc);
+                         color: var(--acc-ink); }
   .lens-actions button:hover { filter: brightness(1.08); background: var(--acc); }
-  .lens-meta { display: flex; justify-content: space-between; gap: var(--s4); padding: 0 var(--s1);
-               font: 400 var(--t-xs)/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+  .lens-meta { font: 400 var(--t-xs)/1 var(--mono); color: var(--dim);
+               font-variant-numeric: tabular-nums; white-space: nowrap; }
   .lens-meta b { color: var(--fg); font-weight: 500; }
 
-  .hint { padding: var(--s2) var(--s3); font-size: var(--t-xs); color: var(--dim); max-width: 26ch; line-height: 1.5; }
-  .hint kbd { font: 500 10px/1 var(--mono); color: var(--fg); border: 1px solid var(--line-strong); border-bottom-width: 2px;
-              border-radius: 3px; padding: 2px 4px; }
+  .hint { margin-left: auto; font-size: var(--t-xs); color: var(--dim); max-width: 34ch; line-height: 1.5; }
+  .hint kbd { font: 500 10px/1 var(--mono); color: var(--fg); border: 1px solid var(--line-strong);
+              border-bottom-width: 2px; border-radius: 3px; padding: 2px 4px; }
   .touch-only { display: none; }
   @media (pointer: coarse) { .touch-only { display: block; } .mouse-only { display: none; } }
 
-  .loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, 84vw);
-             padding: var(--s4); display: grid; gap: var(--s3); pointer-events: none; }
-  .loading.docked { top: auto; bottom: 108px; transform: translateX(-50%); padding: var(--s2) var(--s3); gap: var(--s2); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+             width: min(340px, 78%); padding: var(--s4); display: grid; gap: var(--s3); }
   .loading[hidden] { display: none; }
   .loading p { margin: 0; font-size: var(--t-sm); display: flex; justify-content: space-between; gap: var(--s3); }
   .loading p span:last-child { font: 400 var(--t-xs)/1.6 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
-  .bar { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--warn); transition: width 240ms ease; }
-  .loading.error { border-color: var(--bad); pointer-events: auto; }
-  .loading.error .bar i { background: var(--bad); }
+  .meter { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--warn); transition: width 240ms ease; }
+  .loading.error { border-color: var(--bad); }
+  .loading.error .meter i { background: var(--bad); }
 
-  @media (max-width: 720px) {
-    .hud { grid-template-columns: 1fr; padding: var(--s2); gap: var(--s2); }
-    .slate { max-width: none; justify-self: stretch; padding: var(--s2) var(--s3); }
-    .slate h1 { font-size: 18px; }
-    .facts { display: none; }
-    .views { grid-column: 1; grid-row: 2; justify-self: end; align-self: start; min-width: 0; }
-    .views .view-btn small { display: none; }
-    .bottom { grid-template-columns: 1fr; }
-    .readout, .hint { display: none; }
-    .lens { justify-self: stretch; }
-    .loading.docked { bottom: 96px; }
+  /* Narrow: picture on top at a fixed height, controls tiled underneath and
+     the page scrolls. Keeping the fixed full-height grid here squeezed the
+     picture to a sliver, and laying the rails out in columns pushed them off
+     the side of the screen. */
+  @media (max-width: 1040px) {
+    html, body { overflow: auto; }
+    .rig { position: static; min-height: 100%; grid-template-rows: auto auto auto; }
+    .stage { grid-template-columns: minmax(0, 1fr); }
+    .viewer { order: 1; }
+    .rail-r { order: 2; }
+    .rail-l { order: 3; }
+    .rail { border: 0; border-top: 1px solid var(--line); overflow: visible;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); align-content: start; }
+    .finder { padding: var(--s2); height: auto; }
+    .bar { flex-wrap: wrap; }
+    .bar .data { margin-left: 0; }
   }
-  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+  @media (max-width: 720px) {
+    .bar { padding: var(--s2) var(--s3); gap: var(--s2); }
+    .slate h1 { font-size: 16px; }
+    .slate .sub, .hint, .readout { display: none; }
+    .lens { margin: 0; width: 100%; }
+    .lens-meta { display: none; }
+    .rail { grid-auto-columns: minmax(136px, 1fr); padding: var(--s2); gap: var(--s3); }
+    .view-btn small { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .meter i { transition: none; } }
 </style>
 </head>
 <body>
 
-<canvas id="scene" tabindex="0" aria-label="3D walk-through of the House 1600s Interior scan. Drag to look around; use W A S D or the arrow keys to move."></canvas>
+<div class="rig">
 
-<div class="hud">
-  <header class="slate panel">
-    <h1>House 1600s Interior</h1>
-    <p class="sub">Location scout. PortalCam capture, reconstructed 24 Aug 2026.</p>
-    <dl class="facts"><dt>Splats</dt><dd>3,297,231 of 3,305,527</dd><dt>Detail</dt><dd>LOD 0, floaters removed, web preview</dd><dt>Storeys</dt><dd>1, floor at -0.25 m</dd><dt>Footprint</dt><dd>20.3 &times; 23.9 m</dd></dl>
+  <header class="bar">
+    <div class="slate">
+      <h1>House 1600s Interior</h1>
+      <p class="sub">Location scout. PortalCam capture, reconstructed 24 Aug 2026.</p>
+    </div>
     <p class="data"><a href="data/">&#8595; Measure this scan &mdash; plan, mesh, point cloud, wall data</a></p>
   </header>
 
-  <nav class="views panel" aria-label="Viewpoints and movement">
-    <div class="group-label">Viewpoint</div>
-    <button class="view-btn" data-view="start" aria-pressed="true">Capture start <small>eye level</small></button>
-    <div class="group-label">Movement</div>
-    <div class="seg" role="group" aria-label="Movement mode">
-      <button data-mode="walk" aria-pressed="true">Walk</button>
-      <button data-mode="fly" aria-pressed="false">Fly</button>
-    </div>
-    <div class="group-label">Speed</div>
-    <div class="seg seg3" role="group" aria-label="Movement speed">
-      <button data-speed="0.4" aria-pressed="false">Slow</button>
-      <button data-speed="1" aria-pressed="true">Normal</button>
-      <button data-speed="3" aria-pressed="false">Fast</button>
-    </div>
-    <div class="group-label">Scale figure</div>
-    <div class="seg" role="group" aria-label="Scale figure">
-      <button data-figure="toggle" aria-pressed="true">Hide</button>
-      <button data-figure="place">Place</button>
-    </div>
-  </nav>
+  <div class="stage">
 
-  <div class="bottom">
-    <div class="readout panel" aria-live="off">
+    <aside class="rail rail-l" aria-label="Scan and viewpoints">
+      <div class="group">
+        <div class="group-label">Scan</div>
+        <dl class="facts"><dt>Splats</dt><dd>3,297,231 of 3,305,527</dd><dt>Detail</dt><dd>LOD 0, floaters removed, web preview</dd><dt>Storeys</dt><dd>1, floor at -0.25 m</dd><dt>Footprint</dt><dd>20.3 &times; 23.9 m</dd></dl>
+      </div>
+      <div class="group">
+        <div class="group-label">Viewpoint</div>
+        <button class="view-btn" data-view="start" aria-pressed="true">Capture start <small>eye level</small></button>
+      </div>
+      <div class="group">
+        <div class="group-label">Frame lines</div>
+        <div class="seg seg3" role="group" aria-label="Frame lines">
+          <button data-guide="0" aria-pressed="true">Off</button>
+          <button data-guide="1.85" aria-pressed="false">1.85</button>
+          <button data-guide="2.39" aria-pressed="false">2.39</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-label">Scale figure</div>
+        <div class="seg" role="group" aria-label="Scale figure">
+          <button data-figure="toggle" aria-pressed="true">Hide</button>
+          <button data-figure="place">Place</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="viewer">
+      <div class="finder">
+        <div class="gate">
+          <canvas id="scene" tabindex="0" aria-label="Walk-through of the House 1600s Interior scan. Drag to look around, W A S D or the arrow keys to move, or use the Move pad and Tour controls beside the picture."></canvas>
+          <div class="marks" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><b></b>
+            <div class="guide top" id="guide-top"></div>
+            <div class="guide bot" id="guide-bot"></div>
+          </div>
+          <div class="loading panel" id="loading" role="status">
+            <p><span id="load-msg">Loading the scan</span><span id="load-count">39 MB</span></p>
+            <div class="meter"><i id="load-bar"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="transport" id="transport">
+        <button id="tour-btn" class="wide" aria-pressed="false" type="button">&#9654;&nbsp; Tour</button>
+        <input id="tour-slider" type="range" min="0" max="1000" value="0" step="1"
+               aria-label="Position along the capture walk">
+        <span class="count"><b id="tour-pos">0</b> of <span id="tour-len">0</span> m walked</span>
+      </div>
+    </div>
+
+    <aside class="rail rail-r" aria-label="Movement">
+      <div class="group">
+        <div class="group-label">Move</div>
+        <div class="pad" role="group" aria-label="Move around">
+          <button data-nudge="turnL" type="button" aria-label="Turn left">&#8630;<small>Turn</small></button>
+          <button data-nudge="fwd" type="button" aria-label="Walk forward">&#9650;<small>Forward</small></button>
+          <button data-nudge="turnR" type="button" aria-label="Turn right">&#8631;<small>Turn</small></button>
+          <button data-nudge="left" type="button" aria-label="Step left">&#9664;<small>Step</small></button>
+          <button data-nudge="back" type="button" aria-label="Walk back">&#9660;<small>Back</small></button>
+          <button data-nudge="right" type="button" aria-label="Step right">&#9654;<small>Step</small></button>
+        </div>
+        <button id="go-btn" class="wide" type="button" aria-pressed="true">Click a spot to walk there</button>
+        <div class="pad" role="group" aria-label="Look up and down">
+          <button data-nudge="lookU" type="button" aria-label="Look up">&#9650;<small>Look up</small></button>
+          <button data-nudge="level" type="button" aria-label="Level the horizon">&#8213;<small>Level</small></button>
+          <button data-nudge="lookD" type="button" aria-label="Look down">&#9660;<small>Look down</small></button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-label">Mode</div>
+        <div class="seg" role="group" aria-label="Movement mode">
+          <button data-mode="walk" aria-pressed="true">Walk</button>
+          <button data-mode="fly" aria-pressed="false">Fly</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-label">Speed</div>
+        <div class="seg seg3" role="group" aria-label="Movement speed">
+          <button data-speed="0.4" aria-pressed="false">Slow</button>
+          <button data-speed="1" aria-pressed="true">Normal</button>
+          <button data-speed="3" aria-pressed="false">Fast</button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <footer class="bar bar-bot">
+    <div class="readout" aria-live="off">
       <span>Position</span><b id="ro-pos">0.0, 0.0 m</b>
       <span>Eye height</span><b id="ro-h">1.60 m</b>
       <span>Heading</span><b id="ro-hdg">048&deg;</b>
       <span>Storey</span><b id="ro-storey">Ground</b>
     </div>
 
-    <div class="lens panel">
+    <div class="lens">
       <div class="lens-row" role="group" aria-label="Lens focal length">
         <button data-mm="18" aria-pressed="false">18</button>
-        <button data-mm="24" aria-pressed="true">24</button>
+        <button data-mm="25" aria-pressed="true">25</button>
         <button data-mm="32" aria-pressed="false">32</button>
-        <button data-mm="40" aria-pressed="false">40</button>
         <button data-mm="50" aria-pressed="false">50</button>
-        <button data-mm="65" aria-pressed="false">65</button>
-        <button data-mm="85" aria-pressed="false">85</button>
+        <button data-mm="75" aria-pressed="false">75</button>
+        <button data-mm="135" aria-pressed="false">135</button>
       </div>
       <div class="lens-actions"><button data-photo type="button" title="Save a still (P)">Photo</button></div>
-      <div class="lens-meta"><span><b id="lens-mm">24 mm</b> on Super 35</span><span>H <b id="lens-fov">58.8&deg;</b></span></div>
+      <div class="lens-meta"><b id="lens-mm">25 mm</b> on Super 35 &middot; H <b id="lens-fov">56.8&deg;</b></div>
     </div>
 
-    <div class="hint panel">
-      <div class="mouse-only">Drag to look. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Shift</kbd> to hurry. <kbd>P</kbd> saves a still. <kbd>F</kbd> hides the 1.75 m figure, <kbd>G</kbd> drops it 2 m ahead. In Fly, <kbd>Q</kbd> <kbd>E</kbd> go down and up.</div>
-      <div class="touch-only">Drag to look. Pinch to walk forward or back. Slide two fingers to step sideways. Use <b>Speed</b> to go slower or faster, and <b>Place</b> to drop the 1.75 m figure a couple of metres ahead of you.</div>
+    <div class="hint">
+      <div class="mouse-only">Use the <b>Move</b> pad, click a spot in the picture, or ride the <b>Tour</b>. Drag to look, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk, <kbd>P</kbd> saves a still.</div>
+      <div class="touch-only">Tap a spot in the picture to walk there, hold the <b>Move</b> arrows, or press <b>Tour</b>. Drag on the picture to look around.</div>
     </div>
-  </div>
-</div>
+  </footer>
 
-<div class="loading panel" id="loading" role="status">
-  <p><span id="load-msg">Loading the scan</span><span id="load-count">39 MB</span></p>
-  <div class="bar"><i id="load-bar"></i></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/playcanvas@2.22.2/build/playcanvas.min.js"></script>
@@ -232,15 +366,41 @@
     fail("This browser could not start WebGL, which the walk-through needs. Try a current Chrome, Safari or Edge.");
     return;
   }
-  app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+  // The picture has its own gate inside the chrome. FILLMODE_FILL_WINDOW would
+  // stretch the canvas back over the whole window -- and so back under the
+  // controls -- on every resize.
+  app.setCanvasFillMode(pc.FILLMODE_NONE);
   app.setCanvasResolution(pc.RESOLUTION_AUTO);
   app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-  window.addEventListener("resize", function () { app.resizeCanvas(); });
+  // The gate is sized here rather than by `aspect-ratio` alone: in a grid row
+  // that can shrink, the ratio wins over max-height and the box grows wider
+  // than the screen -- at 420 px it came out 565 px wide and sat on top of the
+  // controls, which is the whole thing this layout exists to prevent.
+  var gate = document.querySelector(".gate"), finder = document.querySelector(".finder");
+  function fitCanvas() {
+    var cs = getComputedStyle(finder);
+    var availW = finder.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var availH = finder.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    if (!(availW > 2 && availH > 2)) { return; }
+    // Narrow screens stack the chrome under the picture, so the finder has no
+    // height of its own to fit into: cap against the viewport instead.
+    var narrow = window.matchMedia("(max-width: 1040px)").matches;
+    var cap = narrow ? window.innerHeight * 0.66 : availH;
+    var w = Math.min(availW, cap * 16 / 9), h = w * 9 / 16;
+    gate.style.width = Math.round(w) + "px";
+    gate.style.height = Math.round(h) + "px";
+    app.resizeCanvas(Math.round(w), Math.round(h));
+    if (typeof setGuide === "function") { setGuide(guideRatio); }
+  }
+  window.addEventListener("resize", fitCanvas);
+  window.addEventListener("orientationchange", fitCanvas);
+  if (window.ResizeObserver) { new ResizeObserver(fitCanvas).observe(finder); }
+  fitCanvas();
 
   var cam = new pc.Entity("camera");
   cam.addComponent("camera", {
     clearColor: new pc.Color(14 / 255, 15 / 255, 18 / 255),
-    nearClip: 0.05, farClip: 500, horizontalFov: true, fov: fovFor(24)
+    nearClip: 0.05, farClip: 500, horizontalFov: true, fov: fovFor(25)
   });
   app.root.addChild(cam);
 
@@ -272,8 +432,9 @@
 
   // ---- camera state, all in the scan frame ----
   var TITLE = document.querySelector("h1").textContent;
-  var currentMM = 24;
+  var currentMM = 25;
   var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1 };
+  var lastLook = 0;                 // when the viewer last aimed the head themselves
 
   // Nearest floor at or below the camera. Scans have one to three storeys, so
   // this is a scan-by-scan list rather than Stevens' hard-coded ground/upper.
@@ -296,7 +457,9 @@
   function setMode(mode) { state.mode = mode; pressOnly("[data-mode]", "data-mode", mode); }
 
   document.querySelectorAll("[data-view]").forEach(function (b) {
-    b.addEventListener("click", function () { VIEWS[b.dataset.view](); pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus(); });
+    b.addEventListener("click", function () {
+      stopAssist(); VIEWS[b.dataset.view](); pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus();
+    });
   });
   document.querySelectorAll("[data-mode]").forEach(function (b) {
     b.addEventListener("click", function () {
@@ -309,6 +472,30 @@
     b.addEventListener("click", function () {
       state.speed = Number(b.dataset.speed);
       pressOnly("[data-speed]", "data-speed", b.dataset.speed);
+      canvas.focus();
+    });
+  });
+
+  // Frame lines, the way a viewfinder marks a delivery ratio inside the
+  // capture frame: the gate stays 16:9 and the masked bands sit over it.
+  // In pixels, not per cent: as a percentage of the mask layer the height
+  // resolved to zero and the bands never appeared, inline style and all.
+  var guideTop = document.getElementById("guide-top"), guideBot = document.getElementById("guide-bot");
+  var guideRatio = 0;
+  function setGuide(ratio) {
+    guideRatio = ratio || 0;
+    // fitCanvas() runs once during setup, before these are bound. Without this
+    // the first call threw and took the rest of the scene down with it.
+    if (!guideTop || !guideBot) { return; }
+    var h = gate.getBoundingClientRect().height;
+    var px = guideRatio ? Math.round(h * Math.max(0, (1 - (16 / 9) / guideRatio) / 2)) : 0;
+    guideTop.style.height = px + "px";
+    guideBot.style.height = px + "px";
+  }
+  document.querySelectorAll("[data-guide]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      setGuide(Number(b.dataset.guide));
+      pressOnly("[data-guide]", "data-guide", b.dataset.guide);
       canvas.focus();
     });
   });
@@ -329,6 +516,7 @@
   window.addEventListener("keydown", function (e) {
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     keys[e.code] = true;
+    if (/^(KeyW|KeyA|KeyS|KeyD|Arrow)/.test(e.code)) { stopAssist(); }
     if (e.code === "KeyP") { takePhoto(); }
     if (e.code === "KeyF") { showFigure(!figure.enabled); }
     if (e.code === "KeyG") { placeFigure(); showFigure(true); }
@@ -340,11 +528,13 @@
   var pointers = new Map(), pinchPrev = null;
   function mid() { var a = Array.from(pointers.values()); return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) }; }
 
+  var tap = null;
   canvas.addEventListener("pointerdown", function (e) {
     canvas.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     canvas.classList.add("dragging");
     pinchPrev = pointers.size === 2 ? mid() : null;
+    tap = pointers.size === 1 ? { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 } : null;
   });
   canvas.addEventListener("pointermove", function (e) {
     var p = pointers.get(e.pointerId);
@@ -352,6 +542,8 @@
     if (pointers.size === 1) {
       state.yaw -= (e.clientX - p.x) * 0.18;
       state.pitch = pc.math.clamp(state.pitch - (e.clientY - p.y) * 0.18, -89, 89);
+      if (tap) { tap.moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); }
+      lastLook = performance.now();
     }
     p.x = e.clientX; p.y = e.clientY;
     if (pointers.size === 2) {
@@ -368,9 +560,15 @@
     pinchPrev = pointers.size === 2 ? mid() : null;
     if (!pointers.size) canvas.classList.remove("dragging");
   }
-  canvas.addEventListener("pointerup", endPointer);
-  canvas.addEventListener("pointercancel", endPointer);
-  canvas.addEventListener("wheel", function (e) { e.preventDefault(); move(-e.deltaY * 0.004, 0, 0); }, { passive: false });
+  // A press that went nowhere is a destination, not a look: 6 px of slop so a
+  // trackpad or a thumb still counts as a tap.
+  canvas.addEventListener("pointerup", function (e) {
+    if (tap && tap.moved < 6 && performance.now() - tap.t < 700) { goToScreen(e.clientX, e.clientY); }
+    tap = null;
+    endPointer(e);
+  });
+  canvas.addEventListener("pointercancel", function (e) { tap = null; endPointer(e); });
+  canvas.addEventListener("wheel", function (e) { e.preventDefault(); stopAssist(); move(-e.deltaY * 0.004, 0, 0); }, { passive: false });
 
   // forward, right, up in metres
   function move(fwd, right, up) {
@@ -465,6 +663,159 @@
     placeFigure(); showFigure(true); canvas.focus();
   });
 
+  // ---- getting about without a keyboard ---------------------------------
+  // Mouse-look plus WASD is not navigation everyone can use. Three ways in that
+  // need neither hand on a keyboard nor a steady drag: tap a spot and be walked
+  // there, hold a direction on the pad, or ride the capture walk with the
+  // transport under the frame.
+  var TOUR = [[-0.00,0.00,-0.00],[0.00,-0.00,-0.00],[0.13,0.01,0.81],[-0.19,-0.40,1.15],[-0.75,-0.45,1.19],[-1.25,0.09,1.21],[-1.45,0.95,1.21],[-1.56,2.02,1.16],[-1.86,2.72,1.14],[-2.03,2.71,1.11],[-1.82,2.64,1.14],[-1.90,2.82,1.17],[-2.18,3.11,1.20],[-2.42,3.20,1.19],[-2.78,3.24,1.17],[-3.83,3.07,1.11],[-4.16,3.14,1.07],[-4.03,3.13,1.11],[-4.03,3.20,1.17],[-4.03,3.34,1.16],[-4.02,3.35,1.15],[-3.97,3.16,1.14],[-3.08,3.15,1.16],[-2.13,3.07,1.19],[-1.61,2.32,1.20],[-1.34,1.55,1.22],[-1.29,0.95,1.23],[-1.33,0.32,1.26],[-1.10,-0.26,1.25],[-0.82,-0.69,1.26],[-1.32,-1.29,1.24],[-1.65,-2.14,1.15],[-2.17,-2.84,1.17],[-2.99,-3.09,1.20],[-3.79,-3.26,1.20],[-4.48,-3.41,1.18],[-5.15,-3.53,1.18],[-5.87,-3.44,1.16],[-6.42,-2.98,1.13],[-6.75,-2.40,1.13],[-6.93,-1.78,1.12],[-6.94,-1.13,1.13],[-6.70,-0.57,1.10],[-6.39,0.02,1.10],[-6.05,0.57,1.09],[-5.65,0.97,1.10],[-5.48,1.46,1.09],[-5.48,2.03,1.08],[-5.47,2.61,1.07],[-5.70,3.13,1.07],[-6.27,3.29,1.08],[-6.80,3.24,1.09],[-7.35,3.41,1.09],[-7.90,3.32,1.07],[-8.28,3.07,1.06],[-8.45,2.56,1.05],[-8.64,1.90,1.02],[-8.55,1.27,1.03],[-7.95,1.29,1.04],[-7.15,1.44,1.03],[-6.41,1.56,1.01],[-5.69,1.82,1.02],[-5.06,2.41,1.04],[-4.91,2.82,1.08],[-4.91,2.97,1.12],[-5.02,2.53,1.12],[-5.20,2.10,1.11],[-5.13,2.54,1.10],[-4.92,3.17,1.11],[-4.33,3.34,1.15],[-3.52,3.10,1.18],[-3.22,2.81,1.27],[-3.16,2.15,1.59],[-3.41,1.85,1.94],[-3.86,1.74,2.27],[-4.05,2.12,2.59],[-4.07,2.76,2.94],[-4.01,3.08,3.20],[-3.93,3.29,3.40],[-4.46,3.28,3.40],[-5.30,2.97,3.39],[-5.97,2.83,3.39],[-6.94,2.51,3.39],[-7.77,2.36,3.34],[-8.22,2.23,3.35],[-8.39,1.97,3.37],[-8.16,2.09,3.37],[-8.02,2.32,3.35],[-7.54,2.49,3.36],[-7.21,2.58,3.37],[-7.21,2.65,3.36],[-6.99,2.73,3.33],[-6.12,2.64,3.32],[-5.44,2.47,3.32],[-5.40,1.80,3.31],[-5.48,1.00,3.29],[-5.96,0.35,3.30],[-6.76,0.15,3.34],[-7.37,0.13,3.35],[-7.65,0.47,3.33],[-7.48,0.80,3.33],[-6.96,0.64,3.31],[-6.41,0.35,3.31],[-6.33,-0.31,3.32],[-6.40,-1.17,3.32],[-6.23,-1.86,3.48],[-5.92,-1.99,3.58],[-5.75,-1.97,3.58],[-5.77,-1.92,3.58],[-5.78,-1.91,3.58],[-5.78,-1.92,3.57],[-5.12,-1.93,3.56],[-4.06,-1.96,3.51],[-2.89,-1.96,3.54],[-2.05,-1.96,3.54],[-1.09,-2.03,3.46],[-0.02,-2.30,3.42],[0.44,-2.79,3.44],[0.70,-2.61,3.43],[0.27,-2.62,3.44],[-0.25,-2.23,3.42],[-0.50,-2.13,3.42],[-0.26,-2.46,3.43],[-0.29,-3.06,3.38],[-0.64,-3.61,3.41],[-0.71,-3.79,3.54],[-0.75,-4.19,3.51],[-0.27,-4.65,3.56],[0.49,-5.08,3.56],[0.85,-4.92,3.57],[0.39,-4.51,3.56],[-0.35,-4.54,3.55],[-1.02,-4.58,3.54],[-1.58,-4.56,3.56],[-1.85,-4.87,3.50],[-1.81,-4.87,3.39],[-1.44,-4.72,3.40],[-0.94,-4.66,3.45],[-0.30,-4.55,3.49],[0.24,-4.76,3.53],[0.73,-4.75,3.53],[0.67,-4.35,3.53],[-0.09,-4.45,3.48],[-0.52,-4.54,3.35],[-0.71,-4.76,3.33],[-0.71,-5.19,3.06],[-0.80,-5.35,2.82],[-0.81,-5.28,2.83],[-0.90,-4.94,3.13],[-0.75,-4.41,3.40],[-0.67,-3.62,3.42],[-0.66,-2.85,3.41],[-0.24,-2.24,3.38],[-0.17,-1.96,3.45],[-0.60,-1.78,3.45],[-0.83,-1.93,3.46],[-1.51,-1.90,3.49],[-2.29,-1.96,3.58],[-2.56,-1.85,3.62],[-3.07,-1.88,3.60],[-3.93,-1.91,3.59],[-4.98,-2.00,3.35],[-5.95,-1.97,3.34],[-6.95,-2.06,3.32],[-7.89,-2.14,3.26],[-8.47,-2.13,3.27],[-8.35,-2.02,3.30],[-7.92,-2.02,3.35],[-7.42,-1.97,3.38],[-6.67,-2.05,3.39],[-6.33,-1.64,3.38],[-6.33,-0.83,3.29],[-6.66,-0.30,3.29],[-7.16,-0.05,3.31],[-7.66,0.20,3.31],[-7.81,0.48,3.32],[-7.51,0.62,3.34],[-6.90,0.53,3.32],[-6.11,0.53,3.28],[-5.54,0.30,3.38],[-5.10,0.20,3.40],[-4.84,0.47,3.35],[-4.99,0.88,3.30],[-5.39,0.97,2.92],[-5.46,1.26,3.09],[-5.50,1.77,3.26],[-5.62,2.21,3.27],[-6.18,2.53,3.25],[-6.99,2.69,3.24],[-7.68,2.84,3.21],[-8.02,2.69,3.20],[-7.98,2.67,3.12],[-7.81,2.65,3.01],[-7.97,2.65,3.16],[-8.22,2.57,3.12],[-8.08,2.49,3.02],[-8.17,2.73,3.09],[-8.07,2.93,3.17],[-7.59,2.84,3.24],[-6.89,2.78,3.25],[-6.11,2.76,3.30],[-5.14,2.65,3.24],[-5.34,2.99,3.32],[-4.67,3.17,3.31],[-4.22,3.17,3.21],[-4.00,3.31,3.26],[-3.25,3.44,3.32],[-2.29,3.23,3.36],[-1.63,2.82,3.36],[-1.24,2.08,3.33],[-0.58,1.56,3.32],[-0.15,0.79,3.30],[-0.61,-0.04,3.31],[-0.75,-0.57,3.26],[-0.72,-0.26,3.36],[-0.69,-1.15,3.35],[-0.51,-2.03,3.41],[-0.31,-2.73,3.45],[-0.60,-3.80,3.42],[0.02,-4.43,3.47],[0.54,-5.07,3.51],[0.48,-5.56,3.54],[0.48,-6.55,3.52],[0.37,-7.28,3.55],[0.27,-7.90,3.54],[0.06,-8.34,3.56],[-0.52,-8.25,3.58],[-0.35,-8.05,3.57],[-0.06,-8.09,3.57],[0.23,-8.58,3.58],[0.46,-9.22,3.50],[0.60,-9.86,3.31],[0.63,-10.29,3.02],[0.72,-10.36,2.78],[1.21,-10.30,2.33],[1.39,-10.13,2.16],[1.22,-10.39,2.16],[1.35,-10.15,2.09],[1.53,-10.02,1.99],[1.53,-9.45,1.57],[1.22,-8.75,1.26],[1.02,-8.39,1.28],[1.31,-8.65,1.26],[1.42,-8.79,1.25],[1.48,-9.31,1.43],[1.48,-9.31,1.55],[1.41,-8.87,1.34],[0.75,-8.92,1.34],[-0.03,-9.21,1.28],[-1.01,-9.18,1.29],[-1.52,-9.15,1.32],[-1.69,-9.67,1.36],[-1.56,-9.40,1.35],[-1.42,-9.31,1.34],[-1.35,-9.15,1.31],[-1.17,-8.81,1.27],[-1.24,-8.03,1.27],[-1.58,-7.44,1.20],[-1.91,-7.31,0.94],[-1.93,-7.30,0.93],[-1.94,-7.30,0.93],[-1.94,-7.30,0.93]];              // the route the scanner was carried, decimated
+  var held = {};                    // pad buttons currently down
+  var glide = null;                 // { x, y } destination in the scan frame
+  var touring = false, tourDist = 0, tourLen = 0, tourAcc = [];
+
+  function shortestTurn(from, to) {
+    var d = (to - from) % 360;
+    if (d > 180) d -= 360;
+    if (d < -180) d += 360;
+    return d;
+  }
+
+  function stopAssist() {
+    glide = null;
+    if (touring) { setTouring(false); }
+  }
+
+  // --- tap a spot ---------------------------------------------------------
+  // The page carries no collision geometry, so the destination is where the
+  // look direction meets this storey's floor plane. Capped at 14 m: further
+  // than that and a shallow angle lands you in the next county.
+  var goMode = true;
+  function goToScreen(clientX, clientY) {
+    if (!goMode || state.mode === "fly") { return; }
+    var r = canvas.getBoundingClientRect();
+    var sx = clientX - r.left, sy = clientY - r.top;
+    var near = cam.camera.screenToWorld(sx, sy, cam.camera.nearClip + 0.01);
+    var far = cam.camera.screenToWorld(sx, sy, 40);
+    var dir = far.clone().sub(near);
+    if (dir.y > -0.02) { return; }                       // at or above the horizon
+    var t = (floorAt(state.z).z - near.y) / dir.y;
+    if (t <= 0) { return; }
+    var hit = near.add(dir.mulScalar(t));
+    var tx = hit.x, ty = -hit.z;
+    var dx = tx - state.x, dy = ty - state.y, d = Math.hypot(dx, dy);
+    if (d < 0.25) { return; }
+    if (d > 14) { tx = state.x + dx / d * 14; ty = state.y + dy / d * 14; }
+    if (touring) { setTouring(false); }
+    glide = { x: tx, y: ty };
+  }
+
+  var goBtn = document.getElementById("go-btn");
+  goBtn.addEventListener("click", function () {
+    goMode = !goMode;
+    goBtn.setAttribute("aria-pressed", String(goMode));
+    goBtn.textContent = goMode ? "Click a spot to walk there" : "Click to walk: off";
+    canvas.classList.toggle("pointing", goMode);
+  });
+  canvas.classList.add("pointing");
+
+  // --- hold a direction ---------------------------------------------------
+  document.querySelectorAll("[data-nudge]").forEach(function (b) {
+    var key = b.dataset.nudge;
+    function down(e) {
+      if (e) { e.preventDefault(); }
+      if (key === "level") { state.pitch = 0; lastLook = performance.now(); return; }
+      held[key] = true;
+      if (key === "fwd" || key === "back" || key === "left" || key === "right") { stopAssist(); }
+    }
+    function up() { held[key] = false; }
+    b.addEventListener("pointerdown", down);
+    b.addEventListener("pointerup", up);
+    b.addEventListener("pointerleave", up);
+    b.addEventListener("pointercancel", up);
+    b.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "Enter") { down(null); } });
+    b.addEventListener("keyup", up);
+    b.addEventListener("blur", up);
+  });
+
+  // --- ride the capture walk ----------------------------------------------
+  var tourBtn = document.getElementById("tour-btn"),
+      tourSlider = document.getElementById("tour-slider"),
+      tourPos = document.getElementById("tour-pos"),
+      transport = document.getElementById("transport");
+
+  (function () {
+    if (!TOUR || TOUR.length < 2) { transport.hidden = true; return; }
+    tourAcc = [0];
+    for (var i = 1; i < TOUR.length; i++) {
+      tourLen += Math.hypot(TOUR[i][0] - TOUR[i - 1][0], TOUR[i][1] - TOUR[i - 1][1]);
+      tourAcc.push(tourLen);
+    }
+    document.getElementById("tour-len").textContent = Math.round(tourLen);
+  })();
+
+  function tourAt(dist) {
+    var lo = 0, hi = tourAcc.length - 1;
+    while (lo < hi - 1) { var m = (lo + hi) >> 1; if (tourAcc[m] <= dist) { lo = m; } else { hi = m; } }
+    var span = tourAcc[hi] - tourAcc[lo];
+    var f = span > 1e-6 ? (dist - tourAcc[lo]) / span : 0;
+    var a = TOUR[lo], b = TOUR[hi];
+    return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, z: a[2] + (b[2] - a[2]) * f };
+  }
+
+  function setTouring(on) {
+    touring = on;
+    tourBtn.setAttribute("aria-pressed", String(on));
+    tourBtn.innerHTML = on ? "&#10073;&#10073;&nbsp; Pause" : "&#9654;&nbsp; Tour";
+  }
+
+  // Position comes from the walk; the head stays yours. If you have not looked
+  // about for a moment it drifts back to face the way you are travelling, so
+  // nobody has to steer and ride at once.
+  function applyTour(steer) {
+    var p = tourAt(tourDist), q = tourAt(Math.min(tourLen, tourDist + 1.2));
+    state.x = p.x; state.y = p.y; state.z = p.z;
+    if (steer && performance.now() - lastLook > 2200) {
+      var dx = q.x - p.x, dy = q.y - p.y;
+      if (Math.hypot(dx, dy) > 0.02) {
+        state.yaw += shortestTurn(state.yaw, Math.atan2(-dx, dy) * pc.math.RAD_TO_DEG) * 0.05;
+      }
+    }
+    tourSlider.value = String(Math.round(1000 * (tourLen ? tourDist / tourLen : 0)));
+    tourPos.textContent = String(Math.round(tourDist));
+  }
+
+  tourBtn.addEventListener("click", function () {
+    glide = null;
+    if (!touring && tourDist >= tourLen - 0.01) { tourDist = 0; }
+    setTouring(!touring);
+    if (touring) { setMode("walk"); applyTour(true); }
+    canvas.focus();
+  });
+  tourSlider.addEventListener("input", function () {
+    glide = null;
+    setMode("walk");
+    tourDist = tourLen * Number(tourSlider.value) / 1000;
+    applyTour(false);
+  });
+
+  function stepAssist(dt) {
+    if (touring && tourLen > 0) {
+      tourDist += 1.25 * state.speed * dt;
+      if (tourDist >= tourLen) { tourDist = tourLen; setTouring(false); }
+      applyTour(true);
+      return;
+    }
+    if (!glide) { return; }
+    var dx = glide.x - state.x, dy = glide.y - state.y, d = Math.hypot(dx, dy);
+    var step = 1.6 * state.speed * dt;
+    if (d <= Math.max(step, 0.08)) { state.x = glide.x; state.y = glide.y; glide = null; }
+    else { state.x += dx / d * step; state.y += dy / d * step; }
+    if (state.mode === "walk") { state.z = floorAt(state.z).z + EYE; }
+    if (performance.now() - lastLook > 900 && d > 0.3) {
+      state.yaw += shortestTurn(state.yaw, Math.atan2(-dx, dy) * pc.math.RAD_TO_DEG) * Math.min(1, dt * 2.5);
+    }
+  }
+
   // ---- stills ----
   // The canvas is cleared after each present unless preserveDrawingBuffer is set,
   // so without it toBlob returns an empty image on most machines.
@@ -516,10 +867,19 @@
 
   app.on("update", function (dt) {
     var speed = (state.mode === "fly" ? 3.0 : 1.4) * state.speed * ((keys.ShiftLeft || keys.ShiftRight) ? 3 : 1) * dt;
-    var f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
-    var r = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+    var f = (keys.KeyW || keys.ArrowUp || held.fwd ? 1 : 0) - (keys.KeyS || keys.ArrowDown || held.back ? 1 : 0);
+    var r = (keys.KeyD || keys.ArrowRight || held.right ? 1 : 0) - (keys.KeyA || keys.ArrowLeft || held.left ? 1 : 0);
     var u = state.mode === "fly" ? (keys.KeyE ? 1 : 0) - (keys.KeyQ ? 1 : 0) : 0;
-    if (f || r || u) move(f * speed, r * speed, u * speed);
+    if (f || r || u) { stopAssist(); move(f * speed, r * speed, u * speed); }
+    if (held.turnL || held.turnR) {
+      state.yaw += (held.turnL ? 1 : -1) * 70 * dt;
+      lastLook = performance.now();
+    }
+    if (held.lookU || held.lookD) {
+      state.pitch = pc.math.clamp(state.pitch + (held.lookU ? 1 : -1) * 48 * dt, -89, 89);
+      lastLook = performance.now();
+    }
+    stepAssist(dt);
 
     cam.setPosition(state.x, state.z, -state.y);
     cam.setEulerAngles(state.pitch, state.yaw, 0);
