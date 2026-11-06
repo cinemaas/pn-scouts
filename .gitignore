@@ -1,0 +1,2 @@
+# headless Chrome user-data-dirs from tools/render_rooms.mjs -- never published
+*.profile/
