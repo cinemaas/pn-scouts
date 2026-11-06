@@ -67,7 +67,8 @@
   .facts dd { margin: 0; }
 
   .viewer { display: grid; grid-template-rows: minmax(0, 1fr) auto auto;
-            grid-template-columns: minmax(0, 1fr); min-width: 0; background: #06070a; }
+            grid-template-columns: minmax(0, 1fr); min-width: 0; min-height: 0;
+            overflow: hidden; background: #06070a; }
   .finder { display: grid; place-items: center; min-height: 0; padding: var(--s3); overflow: hidden; }
   .gate { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #05060a; }
   #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block;
@@ -116,7 +117,7 @@
   .room span i { color: var(--dim); font-style: normal; }
   .room[aria-pressed="true"] { border-color: var(--acc); background: var(--acc); color: var(--acc-ink); }
   .room[aria-pressed="true"] span i { color: var(--acc-ink); opacity: 0.75; }
-  .plan { display: block; width: 100%; height: 186px; }
+  .plan { display: block; width: 100%; height: min(186px, 21vh); min-height: 96px; }
   .plan[hidden] { display: none; }
   .plan .wall { stroke: #6f7789; fill: none; vector-effect: non-scaling-stroke; stroke-width: 1; }
   .plan .route { stroke: var(--acc); fill: none; opacity: 0.5; vector-effect: non-scaling-stroke; stroke-width: 1.5; }
@@ -227,7 +228,7 @@
     .lens { margin: 0; width: 100%; }
     .lens-meta { display: none; }
     .room { width: 112px; }
-    .plan { height: 150px; }
+    .plan { height: min(150px, 26vh); }
     .rail { grid-auto-columns: minmax(136px, 1fr); padding: var(--s2); gap: var(--s3); }
     .view-btn small { display: none; }
   }
