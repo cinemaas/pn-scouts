@@ -823,7 +823,8 @@
       pressOnly("[data-chart]", "data-chart", mode);
       chartBody.hidden = mode === "off";
       roomsEl.hidden = mode !== "rooms";
-      planEl.hidden = mode !== "plan";
+      if (mode === "plan") { planEl.removeAttribute("hidden"); }
+      else { planEl.setAttribute("hidden", ""); }
       if (mode === "plan") { planStorey = null; drawPlan(); }
       fitCanvas();
     });
@@ -1034,7 +1035,7 @@
       roH.textContent = (state.z - storey.z).toFixed(2) + " m";
       roHdg.textContent = String(Math.round(hdg)).padStart(3, "0") + "°";
       roStorey.textContent = storey.n;
-      if (!planEl.hidden) { drawPlan(); }
+      if (!planEl.hasAttribute("hidden")) { drawPlan(); }
     }
   });
 
