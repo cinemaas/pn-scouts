@@ -117,6 +117,15 @@
   .room span i { color: var(--dim); font-style: normal; }
   .room[aria-pressed="true"] { border-color: var(--acc); background: var(--acc); color: var(--acc-ink); }
   .room[aria-pressed="true"] span i { color: var(--acc-ink); opacity: 0.75; }
+  .shot { position: relative; flex: 0 0 auto; }
+  .shot .x { position: absolute; top: 3px; right: 3px; padding: 2px 5px; border-radius: 3px;
+             background: rgba(5, 6, 10, 0.74); font: 500 11px/1 var(--mono); color: var(--fg); }
+  .shot .x:hover { background: #a93b29; }
+  .empty { margin: 0; max-width: 72ch; font: 400 var(--t-xs)/1.5 var(--sans); color: var(--dim); }
+  .empty[hidden] { display: none; }
+  .empty b { color: var(--fg); font-weight: 500; }
+  .stack { display: grid; gap: 2px; }
+  .seg button i { font: 400 9px/1 var(--mono); font-style: normal; opacity: 0.7; margin-left: 3px; }
   .plan { display: block; width: 100%; height: min(186px, 21vh); min-height: 96px; }
   .plan[hidden] { display: none; }
   .plan .wall { stroke: #6f7789; fill: none; vector-effect: non-scaling-stroke; stroke-width: 1; }
@@ -148,6 +157,7 @@
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line);
          border-radius: 4px; padding: 2px; }
   .seg.seg3 { grid-template-columns: repeat(3, 1fr); }
+  .seg.seg4 { grid-template-columns: repeat(4, 1fr); }
   .seg button { text-align: center; padding: 7px var(--s2); }
   .view-btn { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--s3);
               background: rgba(236, 238, 242, 0.05); }
@@ -252,11 +262,13 @@
     <aside class="rail rail-l" aria-label="Scan and viewpoints">
       <div class="group">
         <div class="group-label">Scan</div>
-        <dl class="facts"><dt>Splats</dt><dd>3,297,231 of 3,305,527</dd><dt>Detail</dt><dd>LOD 0, floaters removed, web preview</dd><dt>Storeys</dt><dd>1, floor at -0.25 m</dd><dt>Footprint</dt><dd>20.3 &times; 23.9 m</dd></dl>
+        <dl class="facts"><dt>Splats</dt><dd>3,297,231 of 3,305,527</dd><dt>Detail</dt><dd>LOD 0, floaters removed, web preview</dd><dt>Storeys</dt><dd>2, floors at -0.25 m and +2.00 m</dd><dt>Footprint</dt><dd>20.3 &times; 23.9 m</dd></dl>
       </div>
       <div class="group">
         <div class="group-label">Viewpoint</div>
         <button class="view-btn" data-view="start" aria-pressed="true">Capture start <small>eye level</small></button>
+    <button class="view-btn" data-view="ground" aria-pressed="false">Ground <small>-0.25 m</small></button>
+    <button class="view-btn" data-view="upper" aria-pressed="false">Upper <small>+2.00 m</small></button>
       </div>
       <div class="group">
         <div class="group-label">Frame lines</div>
@@ -272,6 +284,16 @@
           <button data-figure="toggle" aria-pressed="true">Hide</button>
           <button data-figure="place">Place</button>
         </div>
+      </div>
+      <div class="group">
+        <div class="group-label">Camera height</div>
+        <div class="seg seg3" role="group" aria-label="Camera height">
+          <button data-h="0.45" aria-pressed="false">Low</button>
+          <button data-h="1.6" aria-pressed="true">Eye</button>
+          <button data-h="2.1" aria-pressed="false">High</button>
+        </div>
+        <input id="h-slider" type="range" min="0.2" max="2.8" step="0.05" value="1.6"
+               aria-label="Camera height above the floor, metres">
       </div>
     </aside>
 
@@ -294,15 +316,20 @@
       <div class="chart" id="chart">
         <div class="chart-head">
           <div class="group-label">Rooms</div>
-          <div class="seg seg3" role="group" aria-label="Room chart">
+          <div class="seg seg4" role="group" aria-label="Room chart">
             <button data-chart="rooms" aria-pressed="true">Pictures</button>
             <button data-chart="plan" aria-pressed="false">Plan</button>
+            <button data-chart="shots" aria-pressed="false">Shots<i id="shot-n"></i></button>
             <button data-chart="off" aria-pressed="false">Hide</button>
           </div>
         </div>
         <div class="chart-body" id="chart-body">
           <div class="rooms" id="rooms"></div>
           <svg class="plan" id="plan" hidden aria-label="Plan of the scan with the places marked"></svg>
+          <div class="rooms" id="shots" hidden></div>
+          <p class="empty" id="shots-empty" hidden>No shots marked yet. Frame something you like and press
+             <b>+ Mark this shot</b> (or <kbd>M</kbd>). Marked shots stay in this browser &mdash;
+             <b>Sheet</b> downloads them as a contact sheet, <b>Copy link</b> shares the frame you are in now.</p>
         </div>
       </div>
 
@@ -339,8 +366,23 @@
           <button data-mode="walk" aria-pressed="true">Walk</button>
           <button data-mode="fly" aria-pressed="false">Fly</button>
         </div>
+        <div class="seg" role="group" aria-label="Walls and stairs" id="walls-seg">
+          <button data-walls="1" aria-pressed="true">Walls on</button>
+          <button data-walls="0" aria-pressed="false">Off</button>
+        </div>
       </div>
 
+      <div class="group">
+        <div class="group-label">Shots</div>
+        <div class="stack">
+          <button class="wide" id="shot-add" type="button" title="Mark this frame (M)">+ Mark this shot</button>
+          <div class="seg seg3" role="group" aria-label="Share shots">
+            <button id="shot-link" type="button" title="Copy a link that opens this exact frame">Link</button>
+            <button id="shot-sheet" type="button" title="Download a contact sheet of the marked shots">Sheet</button>
+            <button id="shot-list" type="button" title="Copy the marked shots as a list of links">List</button>
+          </div>
+        </div>
+      </div>
       <div class="group">
         <div class="group-label">Speed</div>
         <div class="seg seg3" role="group" aria-label="Movement speed">
@@ -356,7 +398,7 @@
   <footer class="bar bar-bot">
     <div class="readout" aria-live="off">
       <span>Position</span><b id="ro-pos">0.0, 0.0 m</b>
-      <span>Eye height</span><b id="ro-h">1.60 m</b>
+      <span>Camera height</span><b id="ro-h">1.60 m</b>
       <span>Heading</span><b id="ro-hdg">048&deg;</b>
       <span>Storey</span><b id="ro-storey">Ground</b>
     </div>
@@ -394,9 +436,92 @@
   // NaN and floater filtering, SH bands dropped to fit. Served as unbundled SOG.
   var TILES = ["scan"];
   var SENSOR_W = 27.03;                       // Super 35 16:9, mm (RED Gemini 5K)
-  var EYE = 1.6;
-  var FLOORS = [{ n: "Ground", z: -0.25 }];
+  var EYE = 1.6;                              // default stand height; state.h is the live one
+  var FLOORS = [{ n: "Ground", z: -0.25 }, { n: "Upper", z: 2.00 }];
   var CENTRE = { x: -3.48, y: -3.49 };
+
+  // ---- walkable surface ----
+  // nav.json (tools/nav_grid.py) is a grid of standable heights measured off the
+  // mesh: a list of levels per cell, so a staircase is a ramp of cells and a wall
+  // is a cell with nothing standable in it. Before it, walk mode pinned eye height
+  // to the nearest storey floor, which made stairs unclimbable -- z could not rise
+  // between storeys, so the upper floor of a scan was unreachable however long you
+  // walked at it. The page must work without the file too: an older published site
+  // has no nav.json, and a failed fetch must not take the walk-through with it.
+  var NAV = null, walls = true;
+
+  function navIndex(d) {
+    var off = new Int32Array(d.n.length + 1), i;
+    for (i = 0; i < d.n.length; i++) { off[i + 1] = off[i] + d.n[i]; }
+    d.off = off;
+    d.zf = new Float32Array(d.z.length);
+    for (i = 0; i < d.z.length; i++) { d.zf[i] = d.z[i] / 100; }
+    return d;
+  }
+  function cellOf(x, y) {
+    var cx = Math.floor((x - NAV.x0) / NAV.cell), cy = Math.floor((y - NAV.y0) / NAV.cell);
+    if (cx < 0 || cy < 0 || cx >= NAV.nx || cy >= NAV.ny) { return -1; }
+    return cy * NAV.nx + cx;
+  }
+  // The standable height in this cell nearest to `foot`, within `tol`, or null.
+  function groundNear(x, y, foot, tol) {
+    if (!NAV) { return null; }
+    var ci = cellOf(x, y);
+    if (ci < 0) { return null; }
+    var best = null, bd = tol === undefined ? NAV.step : tol;
+    for (var i = NAV.off[ci]; i < NAV.off[ci + 1]; i++) {
+      var d = Math.abs(NAV.zf[i] - foot);
+      if (d <= bd) { bd = d; best = NAV.zf[i]; }
+    }
+    return best;
+  }
+  // The floor the camera is standing on is remembered, not re-derived from the
+  // camera's own height. Deriving it meant raising the camera to 2.1 m could
+  // find a different level half a metre away and drop the viewer onto it --
+  // measured at Klaypool, where a change of height moved the camera 0.4 m the
+  // wrong way and changed storey.
+  function settleZ() {
+    var g = groundNear(state.x, state.y, state.g, NAV ? NAV.step : 0);
+    if (g === null) { g = floorAt(state.g + state.h).z; }
+    state.g = g;
+    state.z = g + state.h;
+  }
+  // How much floor surrounds a level: 0 for an isolated patch, 8 in the open.
+  function support(ci, z) {
+    var cx = ci % NAV.nx, cy = Math.floor(ci / NAV.nx), n = 0;
+    for (var k = 0; k < NB.length; k++) {
+      var ax = cx + NB[k][0], ay = cy + NB[k][1];
+      if (ax < 0 || ay < 0 || ax >= NAV.nx || ay >= NAV.ny) { continue; }
+      if (levelIndex(ay * NAV.nx + ax, z, NAV.step) >= 0) { n++; }
+    }
+    return n;
+  }
+
+  // The level to stand on at (x, y) after a jump: near the height asked for,
+  // but with floor around it. A scan carries phantom surfaces -- the underside
+  // of a terrace, a seeded pose height from where the device was carried low --
+  // sitting in the same cell as the real ground and connected to nothing. At
+  // the House 1600s exterior the terrace cell offers -1.40, -0.90 and -0.15,
+  // and taking the nearest to the asked-for height chose -0.90: the camera
+  // stood three quarters of a metre under the garden, able to walk nowhere.
+  function groundFor(x, y, z) {
+    if (!NAV) { return null; }
+    var ci = cellOf(x, y);
+    if (ci < 0) { return null; }
+    var best = null, bscore = -1e9;
+    for (var i = NAV.off[ci]; i < Math.min(NAV.off[ci + 1], NAV.off[ci] + 8); i++) {
+      var lz = NAV.zf[i], score = support(ci, lz) - 2 * Math.abs(lz - z);
+      if (score > bscore) { bscore = score; best = lz; }
+    }
+    return best;
+  }
+
+  // After a jump the old ground means nothing, so search the whole column.
+  function settleFrom(z) {
+    var g = groundFor(state.x, state.y, z);
+    state.g = (g === null ? floorAt(z + state.h).z : g);
+    state.z = state.g + state.h;
+  }
 
   var loadEl = document.getElementById("loading");
   var loadMsg = document.getElementById("load-msg");
@@ -489,8 +614,7 @@
   // ---- camera state, all in the scan frame ----
   var TITLE = document.querySelector("h1").textContent;
   var currentMM = 25;
-  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1 };
-  var lastLook = 0;                 // when the viewer last aimed the head themselves
+  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1, h: EYE, g: 0 };
 
   // Nearest floor at or below the camera. Scans have one to three storeys, so
   // this is a scan-by-scan list rather than Stevens' hard-coded ground/upper.
@@ -504,7 +628,9 @@
   function fovFor(mm) { return 2 * Math.atan(SENSOR_W / (2 * mm)) * pc.math.RAD_TO_DEG; }
 
   var VIEWS = {
-    start: function () { setMode("walk"); state.x = -5.06; state.y = 2.45; state.z = 1.11; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; }
+    start: function () { setMode("walk"); state.x = -5.06; state.y = 2.45; state.z = 1.11; state.yaw = headingTo(CENTRE.x, CENTRE.y); state.pitch = -6; },
+    ground: function () { setMode("walk"); state.x = CENTRE.x; state.y = CENTRE.y; state.z = -0.25 + state.h; state.yaw = 0; state.pitch = -6; },
+    upper: function () { setMode("walk"); state.x = CENTRE.x; state.y = CENTRE.y; state.z = 2.00 + state.h; state.yaw = 0; state.pitch = -6; }
   };
 
   function pressOnly(selector, attr, value) {
@@ -514,13 +640,14 @@
 
   document.querySelectorAll("[data-view]").forEach(function (b) {
     b.addEventListener("click", function () {
-      stopAssist(); VIEWS[b.dataset.view](); pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus();
+      stopAssist(); VIEWS[b.dataset.view](); settleFrom(state.z - state.h);
+      pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus();
     });
   });
   document.querySelectorAll("[data-mode]").forEach(function (b) {
     b.addEventListener("click", function () {
       setMode(b.dataset.mode);
-      if (b.dataset.mode === "walk") { state.z = floorAt(state.z).z + EYE; }
+      if (b.dataset.mode === "walk") { settleFrom(state.z - state.h); }
       canvas.focus();
     });
   });
@@ -556,15 +683,16 @@
     });
   });
 
+  function setLens(mm) {
+    var fov = fovFor(mm);
+    currentMM = mm;
+    cam.camera.fov = fov;
+    pressOnly("[data-mm]", "data-mm", String(mm));
+    document.getElementById("lens-mm").textContent = mm + " mm";
+    document.getElementById("lens-fov").textContent = fov.toFixed(1) + "°";
+  }
   document.querySelectorAll("[data-mm]").forEach(function (b) {
-    b.addEventListener("click", function () {
-      var mm = Number(b.dataset.mm), fov = fovFor(mm);
-      currentMM = mm;
-      cam.camera.fov = fov;
-      pressOnly("[data-mm]", "data-mm", b.dataset.mm);
-      document.getElementById("lens-mm").textContent = mm + " mm";
-      document.getElementById("lens-fov").textContent = fov.toFixed(1) + "°";
-    });
+    b.addEventListener("click", function () { setLens(Number(b.dataset.mm)); canvas.focus(); });
   });
 
   // ---- input ----
@@ -574,6 +702,7 @@
     keys[e.code] = true;
     if (/^(KeyW|KeyA|KeyS|KeyD|Arrow)/.test(e.code)) { stopAssist(); }
     if (e.code === "KeyP") { takePhoto(); }
+    if (e.code === "KeyM") { addShot(); }
     if (e.code === "KeyF") { showFigure(!figure.enabled); }
     if (e.code === "KeyG") { placeFigure(); showFigure(true); }
     if (/^(Arrow|Space)/.test(e.code) && document.activeElement === canvas) e.preventDefault();
@@ -599,7 +728,6 @@
       state.yaw -= (e.clientX - p.x) * 0.18;
       state.pitch = pc.math.clamp(state.pitch - (e.clientY - p.y) * 0.18, -89, 89);
       if (tap) { tap.moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); }
-      lastLook = performance.now();
     }
     p.x = e.clientX; p.y = e.clientY;
     if (pointers.size === 2) {
@@ -637,9 +765,158 @@
       state.y += fy * Math.cos(pitch) * fwd + ry * right;
       state.z += Math.sin(pitch) * fwd + up;
     } else {
-      state.x += fx * fwd + rx * right;
-      state.y += fy * fwd + ry * right;
+      stepTo(state.x + fx * fwd + rx * right, state.y + fy * fwd + ry * right);
     }
+  }
+
+  // Walk towards (tx, ty): stop at walls, follow stairs. Each axis is retried on
+  // its own when the diagonal is blocked, so brushing a wall slides along it
+  // instead of stopping dead -- without that, walking a corridor at a slight
+  // angle feels like being stuck on nothing.
+  function stepTo(tx, ty) {
+    if (!NAV || !walls) {
+      state.x = tx; state.y = ty;
+      if (state.mode === "walk") {
+        // Walls off: follow the floor where there is one, keep going where
+        // there is not, rather than snapping back to a storey height.
+        var free = groundNear(tx, ty, state.g, NAV ? NAV.step : 0);
+        if (free !== null) { state.g = free; }
+        state.z = state.g + state.h;
+      }
+      return true;
+    }
+    var f = state.g, g = groundNear(tx, ty, f);
+    if (g !== null) { state.x = tx; state.y = ty; state.g = g; state.z = g + state.h; return true; }
+    g = groundNear(tx, state.y, f);
+    if (g !== null) { state.x = tx; state.g = g; state.z = g + state.h; return true; }
+    g = groundNear(state.x, ty, f);
+    if (g !== null) { state.y = ty; state.g = g; state.z = g + state.h; return true; }
+    // Corner squeeze. Where two standable cells meet corner to corner -- which
+    // is what a doorway looks like at 0.3 m -- a step across the join lands in
+    // the empty cell between them, every test above fails, and the walk stalls
+    // in the doorway. So look one cell further along the same direction: if
+    // there is floor on the far side at this height, the gap is a join to cross
+    // rather than a void to stop at.
+    var dx = tx - state.x, dy = ty - state.y, dl = Math.hypot(dx, dy);
+    if (dl > 1e-6) {
+      var ax = tx + dx / dl * NAV.cell * 1.5, ay = ty + dy / dl * NAV.cell * 1.5;
+      if (groundNear(ax, ay, f) !== null) {
+        state.x = tx; state.y = ty; state.z = state.g + state.h; return true;
+      }
+    }
+    return false;
+  }
+
+  // ---- routing ----
+  // A* over the walkable cells, so "walk there" goes round the wall instead of
+  // into it, and up the stairs when the destination is on another floor. Nodes
+  // are (cell, level) pairs: one cell holds the floor, the ceiling below it and
+  // the stair tread passing over, and they are not interchangeable.
+  function nodeOf(ci, li) { return ci * 8 + li; }
+  function levelIndex(ci, z, tol) {
+    var best = -1, bd = tol, cap = Math.min(NAV.off[ci + 1], NAV.off[ci] + 8);
+    for (var i = NAV.off[ci]; i < cap; i++) {        // 8: what nodeOf() can encode
+      var d = Math.abs(NAV.zf[i] - z);
+      if (d <= bd) { bd = d; best = i - NAV.off[ci]; }
+    }
+    return best;
+  }
+  var NB = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+  function route(tx, ty, tz) {
+    if (!NAV) { return null; }
+    var sci = cellOf(state.x, state.y), tci = cellOf(tx, ty);
+    if (sci < 0 || tci < 0) { return null; }
+    var sli = levelIndex(sci, state.g, 1e3);
+    if (sli < 0) { return null; }
+    if (NAV.off[tci + 1] === NAV.off[tci]) { return null; }      // nothing standable there
+    var tli = tz === undefined ? -1 : levelIndex(tci, tz, 1.0);
+
+    var start = nodeOf(sci, sli), goals = {};
+    if (tli >= 0) { goals[nodeOf(tci, tli)] = 1; }
+    else { for (var i = NAV.off[tci]; i < NAV.off[tci + 1]; i++) { goals[nodeOf(tci, i - NAV.off[tci])] = 1; } }
+
+    var cell = NAV.cell, cameFrom = new Map(), cost = new Map(), heap = [];
+    function hx(ci) {
+      var dx = (ci % NAV.nx) - (tci % NAV.nx), dy = Math.floor(ci / NAV.nx) - Math.floor(tci / NAV.nx);
+      return Math.hypot(dx, dy) * cell;
+    }
+    function push(n, f) {
+      heap.push([f, n]);
+      var i = heap.length - 1;
+      while (i > 0) {
+        var p = (i - 1) >> 1;
+        if (heap[p][0] <= heap[i][0]) { break; }
+        var t = heap[p]; heap[p] = heap[i]; heap[i] = t; i = p;
+      }
+    }
+    function pop() {
+      var top = heap[0], last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        var i = 0;
+        for (;;) {
+          var l = 2 * i + 1, r = l + 1, m = i;
+          if (l < heap.length && heap[l][0] < heap[m][0]) { m = l; }
+          if (r < heap.length && heap[r][0] < heap[m][0]) { m = r; }
+          if (m === i) { break; }
+          var t = heap[m]; heap[m] = heap[i]; heap[i] = t; i = m;
+        }
+      }
+      return top;
+    }
+
+    cost.set(start, 0); push(start, hx(sci));
+    var found = -1, guard = 0;
+    while (heap.length && guard++ < 120000) {
+      var cur = pop()[1];
+      if (goals[cur]) { found = cur; break; }
+      var ci = Math.floor(cur / 8), li = cur % 8;
+      var z = NAV.zf[NAV.off[ci] + li], g = cost.get(cur);
+      var cx = ci % NAV.nx, cy = Math.floor(ci / NAV.nx);
+      for (var k = 0; k < NB.length; k++) {
+        var nx2 = cx + NB[k][0], ny2 = cy + NB[k][1];
+        if (nx2 < 0 || ny2 < 0 || nx2 >= NAV.nx || ny2 >= NAV.ny) { continue; }
+        var nci = ny2 * NAV.nx + nx2, cnt = NAV.off[nci + 1] - NAV.off[nci];
+        for (var j = 0; j < cnt && j < 8; j++) {
+          var nz = NAV.zf[NAV.off[nci] + j];
+          if (Math.abs(nz - z) > NAV.step) { continue; }
+          // Diagonals are allowed to touch at a corner. Requiring both
+          // orthogonal neighbours -- or even either one -- sounds safer and is
+          // not: measured at Klaypool, it cut the reachable grid from 2,864
+          // cells to 2,270 and left nine of the twelve rooms unreachable,
+          // because at 0.3 m a doorway's standable cells meet corner to corner.
+          var n = nodeOf(nci, j);
+          var step = Math.hypot(NB[k][0], NB[k][1]) * cell + Math.abs(nz - z) * 1.5;
+          var ng = g + step;
+          if (!cost.has(n) || ng < cost.get(n)) {
+            cost.set(n, ng); cameFrom.set(n, cur); push(n, ng + hx(nci));
+          }
+        }
+      }
+    }
+    if (found < 0) { return null; }
+
+    var out = [], n2 = found;
+    while (n2 !== undefined) {
+      var c2 = Math.floor(n2 / 8), l2 = n2 % 8;
+      out.push({ x: NAV.x0 + (c2 % NAV.nx + 0.5) * cell,
+                 y: NAV.y0 + (Math.floor(c2 / NAV.nx) + 0.5) * cell,
+                 z: NAV.zf[NAV.off[c2] + l2] });
+      if (n2 === start) { break; }
+      n2 = cameFrom.get(n2);
+    }
+    out.reverse();
+    // Drop waypoints that sit on a straight run: a cell-by-cell path makes the
+    // camera wobble at 0.3 m intervals.
+    var thin = [out[0]];
+    for (var m2 = 1; m2 < out.length - 1; m2++) {
+      var a = thin[thin.length - 1], b = out[m2], c3 = out[m2 + 1];
+      var cross = (b.x - a.x) * (c3.y - a.y) - (b.y - a.y) * (c3.x - a.x);
+      if (Math.abs(cross) > 0.02 || Math.abs(c3.z - a.z) > 0.12) { thin.push(b); }
+    }
+    if (out.length > 1) { thin.push(out[out.length - 1]); }
+    return thin;
   }
 
 
@@ -724,7 +1001,7 @@
   // from the geometry, so these are evenly spread standing points from the
   // capture track, each labelled with a picture taken there. Picking the room
   // that looks right needs no map reading and no driving.
-  var ROOMS = {"slug":"house1600s-interior","storeys":[{"name":"Ground","floor":-0.25,"bounds":[-11.64,4.55,-13.41,6.41],"walls":[[-0.7,-1.3,-0.6,-1.3],[-0.6,-1.3,-0.4,-1.3],[-2.4,-1.4,-2.4,-1.5],[-2.2,-1.4,-2.1,-1.5],[-2.5,-1.3,-2.4,-1.3],[-1.8,-1.5,-1.8,-1.4],[-1.9,-1.4,-1.8,-1.4],[-1.1,-1.6,-1.1,-1.4],[-1.1,-1.4,-1.1,-1.3],[-1.1,-1.3,-0.7,-1.3],[-0.1,-1.3,0.2,-1.3],[-0.2,-1.3,-0.1,-1.3],[0.9,-1.4,1.2,-1.4],[1.4,-0.3,1.4,-0.0],[1.4,0.2,1.4,0.0],[1.4,0.5,1.4,0.6],[1.4,0.2,1.4,0.3],[-0.2,-1.3,-0.4,-1.3],[0.2,-1.3,0.5,-1.4],[1.4,-1.2,1.4,-1.0],[1.4,-1.3,1.4,-1.2],[0.5,-1.4,0.8,-1.4],[1.3,-1.3,1.2,-1.4],[1.4,-1.3,1.3,-1.3],[1.4,-0.6,1.4,-0.5],[1.4,-0.7,1.4,-1.0],[1.4,-0.3,1.4,-0.4],[1.4,0.5,1.4,0.4],[-10.0,1.1,-9.9,1.2],[-9.1,-0.7,-8.9,-0.9],[-9.2,-0.7,-9.1,-0.7],[-9.3,-0.6,-9.2,-0.6],[-9.3,-0.6,-9.4,-0.5],[-9.6,-0.3,-9.5,-0.4],[-9.5,-0.4,-9.4,-0.4],[-9.7,-0.1,-9.6,-0.2],[-9.7,-0.1,-9.7,0.0],[-9.7,0.0,-9.7,0.1],[-9.6,-0.2,-9.6,-0.3],[-8.8,-1.0,-8.8,-1.1],[-8.2,-1.2,-8.4,-1.1],[-8.2,-1.2,-8.2,-1.1],[-8.5,-1.1,-8.4,-1.1],[-8.6,-1.1,-8.5,-1.1],[-9.7,0.3,-9.7,0.5],[-9.7,0.7,-9.7,0.6],[-9.7,0.3,-9.7,0.2],[-9.7,0.2,-9.7,0.1],[-9.7,0.7,-9.7,0.9],[-9.6,1.2,-9.7,0.9],[-9.6,1.3,-9.6,1.2],[-8.1,-1.1,-7.9,-1.1],[-7.5,-1.1,-7.7,-1.1],[-7.8,-1.1,-7.7,-1.1],[-7.4,-1.2,-7.3,-1.2],[-7.3,-1.3,-7.4,-1.4],[-6.6,-1.3,-6.5,-1.2],[-6.5,-1.2,-6.4,-1.2],[-6.2,-1.5,-6.5,-1.4],[-6.6,-1.4,-6.6,-1.3],[-6.2,-1.5,-6.1,-1.5],[-6.2,-1.2,-6.4,-1.2],[-6.2,-1.2,-6.1,-1.2],[-5.9,-1.3,-5.8,-1.3],[-6.1,-1.2,-6.0,-1.3],[-5.7,-1.4,-5.8,-1.3],[-5.6,-1.5,-5.7,-1.4],[-4.8,-1.2,-4.8,-1.5],[-4.8,-0.9,-4.8,-1.1],[-4.8,-0.8,-4.8,-0.9],[-4.8,-1.2,-4.8,-1.1],[-4.8,-0.7,-4.8,-0.3],[-4.8,0.1,-4.8,-0.2],[-4.8,-0.3,-4.8,-0.2],[-4.7,0.6,-4.8,0.4],[-4.8,0.3,-4.8,0.4],[-4.8,0.3,-4.8,0.1],[-4.7,1.1,-4.7,1.0],[-4.7,1.0,-4.7,0.8],[-4.7,0.8,-4.7,0.7],[-4.7,1.2,-4.7,1.1],[-2.7,-1.0,-2.6,-1.1],[-2.6,-1.3,-2.6,-1.2],[-2.7,-1.0,-2.6,-0.8],[-2.6,-0.6,-2.7,-0.7],[-2.6,-0.6,-2.6,-0.5],[-2.6,-0.2,-2.6,-0.5],[-2.6,-0.2,-2.6,-0.1],[-3.7,1.3,-3.6,1.3],[-3.5,1.3,-3.6,1.3],[-2.6,0.1,-2.6,0.3],[-2.6,0.1,-2.6,-0.1],[-2.6,0.3,-2.6,0.6],[-2.6,0.7,-2.6,0.6],[-3.1,1.2,-3.0,1.2],[-3.3,1.2,-3.1,1.2],[-3.4,1.3,-3.3,1.3],[-2.6,1.2,-2.6,1.3],[-2.9,1.3,-3.0,1.2],[-2.6,1.2,-2.6,1.0],[-2.6,1.0,-2.6,0.9],[-2.6,0.9,-2.6,0.7],[-8.0,-6.3,-7.9,-6.2],[-7.9,-8.5,-7.9,-8.3],[-7.9,-8.5,-7.8,-8.6],[-7.9,-8.2,-7.9,-8.3],[-7.9,-8.2,-7.9,-8.1],[-7.8,-7.9,-7.9,-8.1],[-7.7,-7.4,-7.8,-7.5],[-7.8,-7.7,-7.8,-7.8],[-7.8,-7.5,-7.8,-7.7],[-7.8,-7.9,-7.8,-7.8],[-6.8,-8.6,-6.7,-8.6],[-7.0,-8.6,-6.8,-8.6],[-6.3,-8.3,-6.2,-8.2],[-7.8,-7.1,-7.7,-7.0],[-7.8,-7.1,-7.7,-7.2],[-7.7,-7.4,-7.7,-7.2],[-7.7,-6.8,-7.7,-7.0],[-7.7,-6.6,-7.7,-6.7],[-7.8,-6.1,-7.9,-6.2],[-7.8,-6.1,-7.7,-6.1],[-7.7,-6.4,-7.7,-6.3],[-7.7,-6.2,-7.7,-6.3],[-7.7,-6.4,-7.7,-6.6],[-8.8,-4.4,-8.9,-4.4],[-8.9,-4.3,-8.9,-4.4],[-8.9,-4.2,-8.9,-4.3],[-8.7,-4.4,-8.6,-4.4],[-8.1,-4.5,-7.9,-4.6],[-8.2,-4.4,-8.1,-4.5],[-7.9,-4.6,-7.8,-4.6],[-8.2,-4.4,-8.4,-4.4],[-7.7,-4.0,-7.9,-4.0],[-8.6,-4.4,-8.4,-4.4],[-7.7,-4.7,-7.6,-4.7],[-7.6,-4.7,-7.6,-4.8],[-7.4,-4.9,-7.5,-4.9],[-7.1,-5.4,-7.0,-5.3],[-6.9,-5.2,-6.9,-5.1],[-7.0,-5.3,-6.9,-5.2],[-7.4,-4.9,-7.1,-4.9],[-7.0,-4.9,-7.0,-5.0],[-7.6,-3.8,-7.5,-3.7],[-7.6,-3.8,-7.6,-3.9],[-7.5,-3.6,-7.5,-3.4],[-7.6,-3.9,-7.7,-4.0],[-6.2,-5.3,-6.3,-5.3],[-6.4,-5.2,-6.4,-5.3],[-6.3,-5.2,-6.3,-5.1],[-6.0,-5.1,-6.2,-5.2],[-6.2,-5.0,-6.3,-5.1],[-6.2,-5.0,-6.1,-5.0],[-7.5,-2.8,-7.5,-2.6],[-7.5,-3.4,-7.5,-3.3],[-7.5,-3.3,-7.5,-3.0],[-7.5,-2.9,-7.5,-3.0],[-7.5,-2.9,-7.5,-2.8],[-7.5,-1.8,-7.5,-1.7],[-7.5,-1.8,-7.5,-1.9],[-7.5,-2.3,-7.5,-2.1],[-7.5,-2.0,-7.5,-2.1],[-7.5,-1.9,-7.5,-2.0],[-7.5,-2.5,-7.5,-2.6],[-6.0,-1.8,-5.9,-1.6],[-5.9,-1.9,-6.0,-1.8],[-2.6,-12.1,-2.5,-12.0],[-2.7,-8.5,-2.6,-8.5],[-2.6,-8.3,-2.7,-8.5],[-2.6,-8.0,-2.7,-8.1],[-2.7,-8.2,-2.7,-8.1],[-2.6,-8.0,-2.6,-7.9],[-2.5,-7.7,-2.6,-7.7],[-2.5,-7.8,-2.6,-7.9],[-2.5,-7.5,-2.6,-7.5],[-2.7,-7.5,-2.7,-7.4],[-2.6,-7.3,-2.7,-7.4],[-2.6,-7.3,-2.7,-7.3],[-2.7,-7.2,-2.7,-7.3],[-2.6,-7.1,-2.5,-7.0],[-2.7,-7.1,-2.7,-7.2],[-5.5,-5.3,-5.5,-5.2],[-5.4,-5.2,-5.5,-5.2],[-5.2,-5.0,-5.0,-5.0],[-5.3,-5.0,-5.2,-5.0],[-5.4,-5.2,-5.4,-5.1],[-4.8,-5.0,-4.7,-5.0],[-5.0,-5.0,-4.8,-5.0],[-4.7,-5.0,-4.6,-5.0],[-4.5,-5.0,-4.4,-5.0],[-4.6,-5.0,-4.5,-5.0],[-4.4,-5.0,-4.2,-5.0],[-3.9,-5.0,-3.8,-5.0],[-4.2,-5.0,-3.9,-5.0],[-3.7,-5.0,-3.3,-5.1],[-3.2,-5.1,-3.1,-5.1],[-2.7,-5.1,-2.6,-5.1],[-3.1,-5.1,-2.8,-5.1],[-2.7,-5.1,-2.8,-5.1],[-5.5,-1.9,-5.7,-1.9],[-5.6,-1.6,-5.5,-1.6],[-5.1,-2.0,-5.2,-2.0],[-5.2,-2.0,-5.3,-1.9],[-5.3,-1.7,-5.4,-1.7],[-5.4,-1.6,-5.4,-1.7],[-5.2,-1.7,-4.9,-1.7],[-5.3,-1.9,-5.5,-1.9],[-4.9,-1.6,-4.8,-1.5],[-4.9,-2.0,-4.8,-2.0],[-4.8,-2.0,-4.7,-2.0],[-5.1,-2.0,-4.9,-2.0],[-4.2,-2.0,-4.4,-2.0],[-4.7,-2.0,-4.4,-2.0],[-4.0,-2.1,-4.2,-2.0],[-3.7,-2.1,-4.0,-2.1],[-3.4,-2.1,-3.7,-2.1],[-2.9,-2.1,-3.4,-2.1],[-2.9,-2.1,-2.7,-2.1],[-2.6,-2.1,-2.7,-2.1],[-2.4,-1.8,-2.4,-2.1],[-2.4,-1.8,-2.3,-1.8],[-1.9,-1.7,-1.8,-1.6],[-1.9,-1.8,-2.0,-1.9],[-1.2,-2.1,-1.2,-2.2],[-1.2,-2.3,-1.2,-2.2],[-0.5,-2.1,-0.6,-2.1],[-0.7,-2.5,-0.6,-2.2],[-1.1,-1.8,-1.1,-1.6],[-1.2,-2.1,-1.1,-1.8],[-2.3,-1.8,-2.2,-1.8],[-2.2,-1.8,-2.1,-1.9],[-0.8,-2.5,-0.9,-2.5],[-1.0,-2.6,-1.0,-2.5],[-1.1,-2.4,-1.0,-2.5],[-1.2,-2.3,-1.1,-2.4],[1.8,-4.0,1.9,-4.1],[2.2,-4.8,2.2,-4.7],[2.4,-4.4,2.3,-4.5],[2.0,-4.1,2.1,-4.2],[1.9,-3.9,2.0,-3.8],[2.0,-3.7,2.0,-3.8],[1.8,-4.0,1.8,-3.9],[1.9,-3.2,2.0,-3.3],[2.2,-3.3,2.0,-3.3],[2.3,-3.4,2.3,-3.3],[2.2,-3.5,2.1,-3.5],[-0.5,-2.1,-0.4,-2.0],[-0.4,-1.9,-0.4,-2.0],[1.8,-3.1,1.8,-3.2],[2.4,-2.8,2.3,-2.7],[2.5,-2.9,2.4,-2.8],[2.1,-2.6,2.2,-2.6],[-2.5,2.2,-2.4,2.2],[-2.4,2.4,-2.4,2.3],[-1.5,3.9,-1.5,4.0],[-2.5,2.7,-2.5,2.6],[-2.5,2.6,-2.5,2.5],[-2.5,2.8,-2.5,3.0],[-2.1,3.3,-2.0,3.3],[-2.0,3.6,-2.1,3.7],[-2.3,3.6,-2.3,3.5],[-2.5,3.6,-2.4,3.6],[-2.2,3.4,-2.1,3.3],[-2.2,3.8,-2.3,3.8],[-2.3,3.9,-2.4,3.9],[-2.0,3.9,-2.1,3.9],[-2.2,3.7,-2.2,3.8],[-2.1,3.9,-2.2,3.9],[-1.9,3.5,-2.0,3.6],[-1.9,3.4,-1.9,3.5],[-1.8,3.9,-2.0,3.9],[-0.7,3.8,-0.8,3.8],[-0.8,3.9,-0.8,3.8],[-0.9,2.6,-0.9,2.5],[-1.0,2.5,-1.0,2.6],[-1.0,2.5,-0.9,2.5],[-1.0,2.6,-1.0,2.7],[-1.3,4.1,-1.5,4.1],[-1.0,4.1,-1.2,4.1],[-0.9,4.1,-1.0,4.1],[-0.8,4.0,-0.8,3.9],[-0.5,3.6,-0.4,3.6],[-0.5,3.6,-0.5,3.7],[-0.4,3.6,-0.3,3.7],[1.5,1.0,1.5,0.9],[1.5,0.8,1.4,0.9],[1.5,1.0,1.6,1.0],[1.5,0.8,1.4,0.6],[1.7,1.2,1.7,1.3],[1.7,1.3,1.7,1.5],[1.6,1.7,1.5,1.7],[1.6,1.7,1.7,1.6],[1.4,1.8,1.5,1.9],[1.5,2.4,1.5,2.1],[1.5,2.0,1.5,2.1],[0.0,3.9,-0.1,3.8],[-0.2,3.7,-0.1,3.8],[0.6,4.0,0.6,3.8],[0.4,4.0,0.2,4.0],[0.1,4.0,0.2,4.0],[0.6,4.0,0.5,4.0],[1.5,2.6,1.5,2.7],[1.5,3.1,1.5,3.0],[1.5,2.8,1.5,3.0],[1.5,2.6,1.5,2.5],[1.5,2.4,1.5,2.5],[1.1,3.7,0.8,3.8],[1.2,3.2,1.1,3.3],[1.3,3.2,1.2,3.2],[1.2,3.5,1.1,3.3],[1.4,3.2,1.5,3.3],[1.3,3.6,1.4,3.5],[1.1,3.7,1.3,3.7],[1.2,3.5,1.3,3.5],[1.4,3.7,1.3,3.7],[1.6,3.7,1.4,3.7],[1.5,3.5,1.4,3.5],[-9.6,1.5,-9.6,1.3],[-9.9,1.4,-9.8,1.5],[-9.8,1.6,-9.7,1.7],[-9.7,1.7,-9.6,1.7],[-9.9,1.7,-9.8,1.6],[-9.9,1.7,-9.9,1.9],[-9.9,2.0,-9.9,1.9],[-9.6,2.0,-9.7,1.9],[-9.6,1.8,-9.7,1.7],[-9.6,2.1,-9.6,2.2],[-9.5,2.7,-9.5,2.6],[-9.5,2.5,-9.6,2.3],[-9.6,2.3,-9.6,2.2],[-9.0,2.7,-9.2,2.7],[-9.0,2.8,-9.0,2.9],[-9.0,2.9,-9.0,3.0],[-9.2,2.7,-9.3,2.7],[-9.0,3.2,-9.0,3.3],[-9.0,3.5,-9.0,3.3],[-9.0,3.2,-9.0,3.1],[-9.4,4.2,-9.4,4.0],[-9.5,3.8,-9.4,4.0],[-9.0,3.7,-9.1,3.7],[-9.3,3.7,-9.2,3.8],[-9.1,4.4,-9.2,4.4],[-9.3,4.3,-9.4,4.2],[-9.2,4.4,-9.3,4.3],[-8.7,4.3,-9.1,4.4],[-8.4,4.3,-8.6,4.3],[-8.1,4.3,-8.1,4.4],[-8.2,4.9,-8.1,4.8],[-8.2,4.3,-8.4,4.3],[-7.8,4.4,-7.9,4.5],[-7.9,4.5,-8.0,4.5],[-7.8,4.4,-7.6,4.4],[-7.5,4.4,-7.4,4.3],[-6.8,4.2,-6.9,4.3],[-7.1,4.3,-7.2,4.3],[-6.9,4.3,-7.0,4.3],[-7.0,4.3,-7.1,4.3],[-6.6,4.2,-6.7,4.3],[-6.5,4.3,-6.5,4.2],[-6.3,4.4,-6.2,4.3],[-6.1,4.3,-6.2,4.3],[-6.0,4.3,-5.9,4.3],[-6.0,4.3,-6.1,4.3],[-2.3,-12.0,-2.3,-11.9],[-1.7,-12.4,-1.7,-12.2],[-2.0,-11.4,-2.1,-11.5],[-2.2,-11.3,-2.3,-11.4],[-2.2,-11.3,-2.2,-11.1],[-2.2,-11.1,-1.7,-11.0],[-2.5,-10.7,-2.5,-10.6],[-2.4,-10.8,-2.4,-11.0],[-2.5,-10.5,-2.5,-10.6],[-2.5,-10.7,-2.4,-10.8],[-1.7,-11.0,-1.6,-11.3],[-1.6,-11.5,-1.6,-11.3],[-1.6,-11.0,-1.7,-11.0],[-1.5,-11.0,-1.4,-11.0],[-1.3,-11.0,-1.2,-11.0],[-1.1,-10.7,-1.2,-10.4],[-2.1,-11.8,-2.1,-11.7],[-2.2,-11.6,-2.1,-11.5],[-2.2,-11.7,-2.2,-11.6],[-2.1,-11.5,-2.1,-11.7],[-2.3,-11.0,-2.2,-11.0],[-2.4,-11.0,-2.3,-11.0],[-1.1,-10.9,-1.1,-10.7],[-2.4,-9.8,-2.5,-9.9],[-2.5,-9.9,-2.5,-10.1],[-2.4,-10.2,-2.5,-10.1],[-1.4,-10.0,-1.3,-10.1],[-1.5,-9.9,-1.4,-10.0],[-2.5,-9.3,-2.5,-9.4],[-1.5,-9.7,-1.5,-9.8],[-2.3,-10.4,-2.4,-10.4],[-2.4,-10.4,-2.5,-10.5],[-2.3,-10.2,-2.3,-10.4],[-1.3,-10.1,-1.3,-10.2],[-2.4,-9.8,-2.3,-9.7],[-2.3,-9.5,-2.3,-9.6],[-2.3,-9.5,-2.4,-9.4],[-1.1,-9.7,-0.9,-9.7],[-1.5,-9.7,-1.1,-9.7],[-0.1,-9.7,-0.2,-9.7],[-1.2,-10.3,-1.2,-10.4],[-1.2,-10.3,-1.2,-10.2],[-0.9,-9.7,-0.8,-9.7],[-0.7,-9.7,-0.5,-9.7],[-0.3,-9.7,-0.4,-9.7],[-0.2,-9.7,-0.3,-9.7],[-2.4,-9.1,-2.5,-9.1],[-2.2,-8.9,-2.4,-9.0],[-2.4,-9.1,-2.4,-9.0],[-2.1,-8.9,-2.2,-9.0],[-2.4,-8.8,-2.4,-8.7],[-2.3,-8.7,-2.2,-8.7],[-2.2,-8.8,-2.4,-8.8],[-2.1,-8.7,-2.2,-8.7],[-2.2,-8.5,-2.1,-8.6],[-2.2,-8.5,-2.3,-8.5],[-2.2,-8.5,-2.2,-8.4],[-2.2,-8.3,-2.2,-8.4],[-2.4,-8.3,-2.5,-8.4],[-2.4,-7.6,-2.5,-7.5],[-2.4,-7.6,-2.5,-7.7],[-2.4,-6.9,-2.5,-6.8],[-2.3,-7.0,-2.4,-6.9],[-2.3,-7.1,-2.4,-7.0],[-2.5,-7.0,-2.4,-7.0],[-2.4,-6.8,-2.4,-6.7],[-0.2,-7.2,-0.2,-7.1],[-0.3,-7.2,-0.3,-7.3],[-0.5,-7.1,-0.4,-7.2],[-0.1,-7.7,-0.1,-7.6],[-0.5,-7.1,-0.5,-7.0],[-0.5,-6.9,-0.5,-6.8],[-0.5,-6.7,-0.5,-6.8],[-0.5,-6.6,-0.4,-6.6],[-0.6,-6.6,-0.7,-6.6],[-0.3,-6.9,-0.2,-7.0],[-0.3,-6.9,-0.2,-7.1],[-0.3,-6.6,-0.2,-6.6],[-2.4,-6.5,-2.3,-6.5],[-2.3,-6.5,-2.3,-6.4],[-2.2,-6.2,-2.2,-6.1],[-2.4,-6.2,-2.4,-6.1],[-1.9,-5.9,-2.0,-5.8],[-1.9,-5.7,-2.0,-5.8],[-1.9,-6.2,-2.0,-6.0],[-1.9,-6.0,-1.9,-6.1],[-2.2,-6.1,-2.1,-6.2],[-1.5,-6.4,-1.6,-6.2],[-1.5,-6.4,-1.3,-6.4],[-1.2,-6.4,-1.3,-6.4],[-1.8,-5.7,-1.9,-5.7],[-1.8,-6.0,-1.8,-5.7],[-2.5,-5.2,-2.3,-5.2],[-2.3,-5.1,-2.3,-5.2],[-2.2,-4.9,-2.1,-5.1],[-2.2,-4.9,-2.3,-5.1],[-1.8,-5.0,-1.9,-5.0],[-1.3,-5.2,-1.4,-5.2],[-1.5,-4.9,-1.4,-5.0],[-1.4,-5.1,-1.4,-5.0],[-1.4,-5.1,-1.4,-5.2],[-0.8,-6.3,-0.9,-6.3],[-0.7,-6.2,-0.7,-6.5],[-0.9,-6.3,-1.1,-6.4],[-0.9,-6.0,-0.8,-6.0],[-0.5,-6.5,-0.4,-6.5],[-0.7,-5.8,-0.6,-5.8],[-1.0,-5.3,-1.0,-5.4],[-0.7,-5.5,-0.7,-5.3],[-1.3,-5.2,-1.2,-5.0],[-1.1,-5.1,-1.0,-5.2],[-0.7,-5.1,-0.7,-5.3],[-0.1,-5.3,-0.1,-5.4],[-0.6,-5.0,-0.7,-5.0],[-2.2,-6.3,-2.2,-6.2],[-1.6,-6.2,-1.6,-6.1],[-1.7,-6.0,-1.7,-6.1],[-1.6,-6.1,-1.7,-6.1],[-1.9,-5.0,-2.0,-5.0],[-2.1,-5.1,-2.0,-5.0],[-1.5,-4.9,-1.7,-5.0],[-0.7,-6.2,-0.8,-6.3],[-0.8,-6.0,-0.8,-5.9],[-0.4,-6.4,-0.4,-6.3],[-0.6,-6.0,-0.5,-6.3],[-0.6,-5.9,-0.6,-5.8],[-0.6,-6.0,-0.6,-5.9],[-1.0,-5.4,-1.0,-5.5],[-1.1,-5.1,-1.1,-5.0],[-0.7,-5.5,-0.6,-5.6],[-0.6,-5.2,-0.6,-5.6],[-0.6,-5.0,-0.6,-5.1],[-0.2,-5.3,-0.2,-5.2],[-4.7,1.5,-4.6,1.7],[-4.7,1.5,-4.7,1.4],[-4.6,1.8,-4.6,1.7],[-4.6,2.1,-4.6,1.8],[-4.6,2.2,-4.6,2.3],[-4.4,2.4,-4.4,2.3],[-4.4,2.2,-4.3,2.2],[-4.6,2.5,-4.6,2.3],[-4.4,2.4,-4.4,2.7],[-4.4,2.9,-4.4,2.8],[-4.4,2.7,-4.4,2.8],[-4.6,2.8,-4.6,2.7],[-4.6,2.7,-4.6,2.5],[-3.7,1.7,-3.7,1.4],[-3.7,1.7,-3.7,1.8],[-3.3,2.0,-3.4,1.9],[-3.3,2.3,-3.3,2.2],[-3.4,1.9,-3.4,1.8],[-3.5,1.9,-3.6,1.8],[-3.6,2.1,-3.7,2.0],[-3.7,2.1,-3.7,2.0],[-4.1,2.2,-4.0,2.2],[-4.3,2.2,-4.1,2.2],[-3.7,2.1,-3.8,2.1],[-4.0,2.2,-3.8,2.1],[-3.5,2.2,-3.5,2.1],[-3.4,2.4,-3.3,2.3],[-3.5,2.3,-3.5,2.5],[-3.3,2.2,-3.3,2.0],[-2.9,1.4,-2.8,1.4],[-2.8,1.4,-2.8,1.5],[-2.6,1.5,-2.6,1.8],[-2.6,1.5,-2.6,1.3],[-2.6,1.8,-2.6,2.0],[-2.5,2.1,-2.6,2.0],[-2.8,2.0,-2.8,1.6],[-2.8,2.0,-2.7,2.4],[-2.8,2.8,-2.7,2.7],[-2.7,2.7,-2.7,2.5],[-5.7,4.2,-5.8,4.3],[-5.3,4.1,-5.6,4.2],[-5.6,4.2,-5.7,4.1],[-5.3,4.1,-5.2,4.0],[-4.6,2.9,-4.5,3.1],[-4.4,3.1,-4.5,3.1],[-4.4,2.9,-4.4,3.0],[-4.7,3.8,-4.6,3.7],[-4.8,3.8,-4.9,3.8],[-4.9,4.0,-4.9,3.9],[-4.4,3.8,-4.5,3.7],[-4.6,3.7,-4.5,3.7],[-4.3,3.9,-4.4,3.8],[-2.8,3.9,-2.9,3.9],[-4.2,4.0,-4.1,4.0],[-3.6,4.0,-3.7,4.0],[-3.4,4.0,-3.5,4.0],[-3.8,4.0,-4.0,4.0],[-3.5,4.0,-3.6,4.0],[-4.1,4.0,-4.0,4.0],[-2.8,3.0,-2.7,3.0],[-3.1,4.0,-3.2,4.0],[-3.2,4.0,-3.4,4.0],[-2.5,3.7,-2.7,3.7],[-2.7,3.9,-2.8,3.9],[-2.7,3.7,-2.7,3.8],[0.0,-9.7,0.1,-9.6],[0.1,-9.6,0.4,-9.7],[0.6,-9.7,0.7,-9.7],[0.5,-9.7,0.6,-9.7],[0.8,-9.5,0.8,-9.6],[1.0,-9.5,0.9,-9.5],[0.2,-8.8,0.0,-8.8],[0.3,-8.8,0.2,-8.8],[0.2,-8.5,0.2,-8.4],[0.1,-8.4,0.2,-8.4],[-0.0,-8.8,0.0,-8.7],[-0.0,-8.4,0.1,-8.4],[0.2,-8.5,0.1,-8.5],[0.2,-8.7,0.0,-8.7],[0.2,-7.8,0.1,-7.8],[0.1,-7.8,-0.0,-7.7],[0.1,-7.6,-0.0,-7.6],[0.2,-7.7,0.3,-7.7],[-0.0,-6.9,-0.1,-7.0],[0.0,-6.9,0.1,-6.8],[0.1,-6.8,-0.0,-6.6],[0.8,-6.8,0.6,-6.8],[0.5,-6.7,0.4,-6.7],[0.5,-6.7,0.6,-6.8],[0.4,-6.6,0.5,-6.6],[0.5,-6.6,0.6,-6.5],[0.8,-6.7,0.9,-6.7],[0.8,-6.6,0.9,-6.6],[0.6,-6.0,0.6,-5.9],[0.6,-6.0,0.7,-6.1],[1.0,-6.0,0.9,-6.1],[0.0,-5.3,-0.1,-5.3],[0.2,-5.2,0.0,-5.3],[0.1,-5.1,0.0,-5.1],[0.0,-5.1,-0.1,-5.1],[0.4,-5.2,0.3,-5.2],[0.4,-5.1,0.4,-5.2],[0.8,-6.3,0.6,-6.4],[0.7,-6.3,0.7,-6.2],[1.2,-10.9,1.3,-10.9],[1.5,-10.8,1.3,-10.9],[1.5,-10.8,1.6,-10.8],[1.2,-10.8,1.2,-10.2],[1.2,-10.2,1.2,-10.1],[1.9,-10.4,1.9,-10.0],[1.2,-10.1,1.1,-9.8],[1.1,-9.5,1.1,-9.6],[1.9,-10.0,1.9,-9.9],[1.8,-10.8,1.9,-10.8],[1.9,-10.4,1.9,-10.6],[1.9,-10.8,1.9,-10.6],[1.6,-10.8,1.8,-10.8],[1.1,-9.6,1.1,-9.7],[1.9,-9.7,1.9,-9.6],[1.9,-9.7,1.9,-9.9],[1.9,-9.1,1.9,-9.2],[1.9,-9.5,1.9,-9.2],[1.9,-8.4,2.0,-8.3],[1.8,-8.1,1.9,-8.2],[1.9,-8.8,1.9,-8.9],[1.9,-8.7,1.9,-8.8],[1.9,-8.9,1.9,-9.1],[2.0,-8.4,2.0,-8.5],[1.8,-8.1,1.8,-7.9],[1.1,-7.2,1.0,-7.1],[1.7,-7.2,1.5,-7.2],[1.4,-7.2,1.2,-7.2],[1.8,-7.9,1.9,-7.7],[1.9,-7.4,1.8,-7.3],[1.9,-7.4,1.9,-7.5],[1.1,-6.9,1.0,-7.0],[1.1,-6.9,1.1,-6.7],[1.0,-7.0,1.0,-7.1],[1.1,-6.4,1.0,-6.4],[1.1,-6.3,1.1,-6.4],[1.1,-6.0,1.1,-6.2],[1.1,-6.3,1.1,-6.2],[1.1,-5.8,1.1,-5.7],[1.0,-6.0,1.0,-5.9],[1.1,-6.0,1.1,-5.9],[1.0,-5.6,1.1,-5.7],[1.0,-5.4,1.0,-5.5],[1.1,-5.3,1.2,-5.2],[1.4,-5.2,1.5,-5.2],[1.3,-5.2,1.4,-5.2],[1.5,-5.2,1.6,-5.3],[1.7,-5.2,1.6,-5.2],[1.7,-5.1,1.8,-5.1],[2.1,-4.8,2.0,-4.9],[2.0,-4.9,2.0,-5.0],[1.8,-5.1,2.0,-5.1],[2.0,-5.0,2.0,-5.1]],"route":[[-0.01,-0.02],[0.11,-0.02],[0.15,-0.08],[-0.12,-0.32],[-0.29,-0.46],[-0.59,-0.46],[-0.89,-0.39],[-1.17,-0.07],[-1.36,0.27],[-1.45,0.7],[-1.45,1.18],[-1.53,1.66],[-1.59,2.23],[-1.66,2.65],[-1.9,2.68],[-2.02,2.7],[-2.02,2.7],[-1.88,2.66],[-1.82,2.65],[-1.79,2.67],[-1.9,2.82],[-1.87,2.94],[-2.15,3.09],[-2.55,3.24],[-2.45,3.22],[-2.33,3.1],[-2.66,3.22],[-3.17,3.15],[-3.68,3.1],[-4.04,2.99],[-4.18,3.15],[-4.12,3.12],[-4.04,3.12],[-4.0,3.13],[-4.01,3.15],[-4.06,3.23],[-4.03,3.31],[-4.02,3.35],[-4.03,3.35],[-4.01,3.35],[-4.0,3.25],[-3.93,3.16],[-3.51,3.17],[-3.03,3.16],[-2.57,3.15],[-2.13,3.07],[-1.89,2.7],[-1.62,2.35],[-1.47,1.99],[-1.34,1.6],[-1.39,1.27],[-1.32,1.02],[-1.29,0.76],[-1.34,0.43],[-1.25,0.09],[-1.16,-0.2],[-0.92,-0.34],[-0.74,-0.51],[-0.93,-0.81],[-1.22,-1.09],[-1.4,-1.46],[-1.56,-1.95],[-1.68,-2.28],[-1.9,-2.61],[-2.26,-2.92],[-2.64,-3.07],[-3.07,-3.11],[-3.46,-3.19],[-3.81,-3.26],[-4.13,-3.37],[-4.48,-3.41],[-4.81,-3.45],[-5.14,-3.53],[-5.47,-3.53],[-5.81,-3.46],[-6.12,-3.27],[-6.36,-3.05],[-6.58,-2.82],[-6.71,-2.5],[-6.83,-2.19],[-6.93,-1.92],[-6.95,-1.57],[-6.94,-1.26],[-6.9,-1.02],[-6.78,-0.7],[-6.65,-0.43],[-6.51,-0.16],[-6.35,0.09],[-6.19,0.38],[-5.97,0.64],[-5.77,0.78],[-5.63,1.01],[-5.52,1.25],[-5.48,1.48],[-5.54,1.77],[-5.48,2.03],[-5.42,2.3],[-5.46,2.59],[-5.53,2.9],[-5.66,3.11],[-5.93,3.24],[-6.23,3.29],[-6.49,3.27],[-6.7,3.25],[-6.96,3.25],[-7.24,3.41],[-7.55,3.36],[-7.77,3.32],[-7.99,3.29],[-8.18,3.22],[-8.3,2.98],[-8.41,2.72],[-8.46,2.44],[-8.57,2.11],[-8.64,1.83],[-8.62,1.52],[-8.53,1.25],[-8.23,1.24],[-7.93,1.29],[-7.59,1.38],[-7.15,1.44],[-6.75,1.43],[-6.44,1.54],[-6.1,1.62],[-5.73,1.77],[-5.43,2.07],[-5.11,2.36],[-4.93,2.68],[-4.91,2.76],[-4.94,2.94],[-4.93,2.97],[-4.92,2.93],[-4.99,2.66],[-5.1,2.38],[-5.2,2.13],[-5.19,2.12],[-5.15,2.36],[-5.13,2.67],[-5.01,2.97],[-4.91,3.24],[-4.58,3.3],[-4.26,3.35],[-3.86,3.25],[-3.49,3.09],[-3.27,2.89],[-3.22,2.81],[-3.14,2.5],[-3.15,2.18],[-3.24,1.96],[-3.37,1.87],[-3.55,1.8],[-3.8,1.75],[1.37,-10.23],[1.39,-10.12],[1.31,-10.25],[1.22,-10.38],[1.2,-10.39],[1.33,-10.17],[1.42,-10.12],[1.5,-10.05],[1.55,-9.82],[1.52,-9.58],[1.46,-9.26],[1.29,-8.95],[1.06,-8.54],[0.97,-8.38],[1.06,-8.44],[1.21,-8.56],[1.35,-8.68],[1.38,-8.7],[1.43,-8.81],[1.4,-9.03],[1.49,-9.36],[1.51,-9.49],[1.48,-9.28],[1.44,-9.02],[1.41,-8.87],[1.16,-8.82],[0.78,-8.91],[0.42,-8.99],[0.02,-9.2],[-0.44,-9.19],[-0.94,-9.18],[-1.23,-9.05],[-1.49,-9.11],[-1.65,-9.34],[-1.64,-9.67],[-1.7,-9.63],[-1.62,-9.47],[-1.51,-9.36],[-1.43,-9.3],[-1.42,-9.38],[-1.41,-9.35],[-1.35,-9.07],[-1.24,-8.92],[-1.18,-8.7],[-1.28,-8.31],[-1.26,-8.0],[-1.46,-7.76],[-1.59,-7.43],[-1.85,-7.35],[-1.91,-7.31],[-1.92,-7.31],[-1.93,-7.3],[-1.94,-7.3],[-1.94,-7.3],[-1.94,-7.3]]}],"points":[{"id":1,"storey":"Ground","floor":-0.25,"x":-5.74,"y":-3.48,"z":1.16,"yaw":270.0,"name":"Kitchen"},{"id":2,"storey":"Ground","floor":-0.25,"x":-6.49,"y":-0.13,"z":1.1,"yaw":15.0,"name":"Parlour"},{"id":3,"storey":"Ground","floor":-0.25,"x":-8.44,"y":2.67,"z":1.06,"yaw":180.0,"name":"Studio"},{"id":4,"storey":"Ground","floor":-0.25,"x":1.22,"y":-10.41,"z":2.14,"yaw":60.0,"name":"Back stairs"},{"id":5,"storey":"Ground","floor":-0.25,"x":-1.94,"y":-7.3,"z":0.93,"yaw":195.0,"name":"Hearth kitchen"}]};
+  var ROOMS = {"slug":"house1600s-interior","storeys":[{"name":"Ground","floor":-0.25,"bounds":[-11.64,4.55,-13.41,6.41],"walls":[[-0.7,-1.3,-0.6,-1.3],[-0.6,-1.3,-0.4,-1.3],[-2.4,-1.4,-2.4,-1.5],[-2.2,-1.4,-2.1,-1.5],[-2.5,-1.3,-2.4,-1.3],[-1.8,-1.5,-1.8,-1.4],[-1.9,-1.4,-1.8,-1.4],[-1.1,-1.6,-1.1,-1.4],[-1.1,-1.4,-1.1,-1.3],[-1.1,-1.3,-0.7,-1.3],[-0.1,-1.3,0.2,-1.3],[-0.2,-1.3,-0.1,-1.3],[0.9,-1.4,1.2,-1.4],[1.4,-0.3,1.4,-0.0],[1.4,0.2,1.4,0.0],[1.4,0.5,1.4,0.6],[1.4,0.2,1.4,0.3],[-0.2,-1.3,-0.4,-1.3],[0.2,-1.3,0.5,-1.4],[1.4,-1.2,1.4,-1.0],[1.4,-1.3,1.4,-1.2],[0.5,-1.4,0.8,-1.4],[1.3,-1.3,1.2,-1.4],[1.4,-1.3,1.3,-1.3],[1.4,-0.6,1.4,-0.5],[1.4,-0.7,1.4,-1.0],[1.4,-0.3,1.4,-0.4],[1.4,0.5,1.4,0.4],[-10.0,1.1,-9.9,1.2],[-9.1,-0.7,-8.9,-0.9],[-9.2,-0.7,-9.1,-0.7],[-9.3,-0.6,-9.2,-0.6],[-9.3,-0.6,-9.4,-0.5],[-9.6,-0.3,-9.5,-0.4],[-9.5,-0.4,-9.4,-0.4],[-9.7,-0.1,-9.6,-0.2],[-9.7,-0.1,-9.7,0.0],[-9.7,0.0,-9.7,0.1],[-9.6,-0.2,-9.6,-0.3],[-8.8,-1.0,-8.8,-1.1],[-8.2,-1.2,-8.4,-1.1],[-8.2,-1.2,-8.2,-1.1],[-8.5,-1.1,-8.4,-1.1],[-8.6,-1.1,-8.5,-1.1],[-9.7,0.3,-9.7,0.5],[-9.7,0.7,-9.7,0.6],[-9.7,0.3,-9.7,0.2],[-9.7,0.2,-9.7,0.1],[-9.7,0.7,-9.7,0.9],[-9.6,1.2,-9.7,0.9],[-9.6,1.3,-9.6,1.2],[-8.1,-1.1,-7.9,-1.1],[-7.5,-1.1,-7.7,-1.1],[-7.8,-1.1,-7.7,-1.1],[-7.4,-1.2,-7.3,-1.2],[-7.3,-1.3,-7.4,-1.4],[-6.6,-1.3,-6.5,-1.2],[-6.5,-1.2,-6.4,-1.2],[-6.2,-1.5,-6.5,-1.4],[-6.6,-1.4,-6.6,-1.3],[-6.2,-1.5,-6.1,-1.5],[-6.2,-1.2,-6.4,-1.2],[-6.2,-1.2,-6.1,-1.2],[-5.9,-1.3,-5.8,-1.3],[-6.1,-1.2,-6.0,-1.3],[-5.7,-1.4,-5.8,-1.3],[-5.6,-1.5,-5.7,-1.4],[-4.8,-1.2,-4.8,-1.5],[-4.8,-0.9,-4.8,-1.1],[-4.8,-0.8,-4.8,-0.9],[-4.8,-1.2,-4.8,-1.1],[-4.8,-0.7,-4.8,-0.3],[-4.8,0.1,-4.8,-0.2],[-4.8,-0.3,-4.8,-0.2],[-4.7,0.6,-4.8,0.4],[-4.8,0.3,-4.8,0.4],[-4.8,0.3,-4.8,0.1],[-4.7,1.1,-4.7,1.0],[-4.7,1.0,-4.7,0.8],[-4.7,0.8,-4.7,0.7],[-4.7,1.2,-4.7,1.1],[-2.7,-1.0,-2.6,-1.1],[-2.6,-1.3,-2.6,-1.2],[-2.7,-1.0,-2.6,-0.8],[-2.6,-0.6,-2.7,-0.7],[-2.6,-0.6,-2.6,-0.5],[-2.6,-0.2,-2.6,-0.5],[-2.6,-0.2,-2.6,-0.1],[-3.7,1.3,-3.6,1.3],[-3.5,1.3,-3.6,1.3],[-2.6,0.1,-2.6,0.3],[-2.6,0.1,-2.6,-0.1],[-2.6,0.3,-2.6,0.6],[-2.6,0.7,-2.6,0.6],[-3.1,1.2,-3.0,1.2],[-3.3,1.2,-3.1,1.2],[-3.4,1.3,-3.3,1.3],[-2.6,1.2,-2.6,1.3],[-2.9,1.3,-3.0,1.2],[-2.6,1.2,-2.6,1.0],[-2.6,1.0,-2.6,0.9],[-2.6,0.9,-2.6,0.7],[-8.0,-6.3,-7.9,-6.2],[-7.9,-8.5,-7.9,-8.3],[-7.9,-8.5,-7.8,-8.6],[-7.9,-8.2,-7.9,-8.3],[-7.9,-8.2,-7.9,-8.1],[-7.8,-7.9,-7.9,-8.1],[-7.7,-7.4,-7.8,-7.5],[-7.8,-7.7,-7.8,-7.8],[-7.8,-7.5,-7.8,-7.7],[-7.8,-7.9,-7.8,-7.8],[-6.8,-8.6,-6.7,-8.6],[-7.0,-8.6,-6.8,-8.6],[-6.3,-8.3,-6.2,-8.2],[-7.8,-7.1,-7.7,-7.0],[-7.8,-7.1,-7.7,-7.2],[-7.7,-7.4,-7.7,-7.2],[-7.7,-6.8,-7.7,-7.0],[-7.7,-6.6,-7.7,-6.7],[-7.8,-6.1,-7.9,-6.2],[-7.8,-6.1,-7.7,-6.1],[-7.7,-6.4,-7.7,-6.3],[-7.7,-6.2,-7.7,-6.3],[-7.7,-6.4,-7.7,-6.6],[-8.8,-4.4,-8.9,-4.4],[-8.9,-4.3,-8.9,-4.4],[-8.9,-4.2,-8.9,-4.3],[-8.7,-4.4,-8.6,-4.4],[-8.1,-4.5,-7.9,-4.6],[-8.2,-4.4,-8.1,-4.5],[-7.9,-4.6,-7.8,-4.6],[-8.2,-4.4,-8.4,-4.4],[-7.7,-4.0,-7.9,-4.0],[-8.6,-4.4,-8.4,-4.4],[-7.7,-4.7,-7.6,-4.7],[-7.6,-4.7,-7.6,-4.8],[-7.4,-4.9,-7.5,-4.9],[-7.1,-5.4,-7.0,-5.3],[-6.9,-5.2,-6.9,-5.1],[-7.0,-5.3,-6.9,-5.2],[-7.4,-4.9,-7.1,-4.9],[-7.0,-4.9,-7.0,-5.0],[-7.6,-3.8,-7.5,-3.7],[-7.6,-3.8,-7.6,-3.9],[-7.5,-3.6,-7.5,-3.4],[-7.6,-3.9,-7.7,-4.0],[-6.2,-5.3,-6.3,-5.3],[-6.4,-5.2,-6.4,-5.3],[-6.3,-5.2,-6.3,-5.1],[-6.0,-5.1,-6.2,-5.2],[-6.2,-5.0,-6.3,-5.1],[-6.2,-5.0,-6.1,-5.0],[-7.5,-2.8,-7.5,-2.6],[-7.5,-3.4,-7.5,-3.3],[-7.5,-3.3,-7.5,-3.0],[-7.5,-2.9,-7.5,-3.0],[-7.5,-2.9,-7.5,-2.8],[-7.5,-1.8,-7.5,-1.7],[-7.5,-1.8,-7.5,-1.9],[-7.5,-2.3,-7.5,-2.1],[-7.5,-2.0,-7.5,-2.1],[-7.5,-1.9,-7.5,-2.0],[-7.5,-2.5,-7.5,-2.6],[-6.0,-1.8,-5.9,-1.6],[-5.9,-1.9,-6.0,-1.8],[-2.6,-12.1,-2.5,-12.0],[-2.7,-8.5,-2.6,-8.5],[-2.6,-8.3,-2.7,-8.5],[-2.6,-8.0,-2.7,-8.1],[-2.7,-8.2,-2.7,-8.1],[-2.6,-8.0,-2.6,-7.9],[-2.5,-7.7,-2.6,-7.7],[-2.5,-7.8,-2.6,-7.9],[-2.5,-7.5,-2.6,-7.5],[-2.7,-7.5,-2.7,-7.4],[-2.6,-7.3,-2.7,-7.4],[-2.6,-7.3,-2.7,-7.3],[-2.7,-7.2,-2.7,-7.3],[-2.6,-7.1,-2.5,-7.0],[-2.7,-7.1,-2.7,-7.2],[-5.5,-5.3,-5.5,-5.2],[-5.4,-5.2,-5.5,-5.2],[-5.2,-5.0,-5.0,-5.0],[-5.3,-5.0,-5.2,-5.0],[-5.4,-5.2,-5.4,-5.1],[-4.8,-5.0,-4.7,-5.0],[-5.0,-5.0,-4.8,-5.0],[-4.7,-5.0,-4.6,-5.0],[-4.5,-5.0,-4.4,-5.0],[-4.6,-5.0,-4.5,-5.0],[-4.4,-5.0,-4.2,-5.0],[-3.9,-5.0,-3.8,-5.0],[-4.2,-5.0,-3.9,-5.0],[-3.7,-5.0,-3.3,-5.1],[-3.2,-5.1,-3.1,-5.1],[-2.7,-5.1,-2.6,-5.1],[-3.1,-5.1,-2.8,-5.1],[-2.7,-5.1,-2.8,-5.1],[-5.5,-1.9,-5.7,-1.9],[-5.6,-1.6,-5.5,-1.6],[-5.1,-2.0,-5.2,-2.0],[-5.2,-2.0,-5.3,-1.9],[-5.3,-1.7,-5.4,-1.7],[-5.4,-1.6,-5.4,-1.7],[-5.2,-1.7,-4.9,-1.7],[-5.3,-1.9,-5.5,-1.9],[-4.9,-1.6,-4.8,-1.5],[-4.9,-2.0,-4.8,-2.0],[-4.8,-2.0,-4.7,-2.0],[-5.1,-2.0,-4.9,-2.0],[-4.2,-2.0,-4.4,-2.0],[-4.7,-2.0,-4.4,-2.0],[-4.0,-2.1,-4.2,-2.0],[-3.7,-2.1,-4.0,-2.1],[-3.4,-2.1,-3.7,-2.1],[-2.9,-2.1,-3.4,-2.1],[-2.9,-2.1,-2.7,-2.1],[-2.6,-2.1,-2.7,-2.1],[-2.4,-1.8,-2.4,-2.1],[-2.4,-1.8,-2.3,-1.8],[-1.9,-1.7,-1.8,-1.6],[-1.9,-1.8,-2.0,-1.9],[-1.2,-2.1,-1.2,-2.2],[-1.2,-2.3,-1.2,-2.2],[-0.5,-2.1,-0.6,-2.1],[-0.7,-2.5,-0.6,-2.2],[-1.1,-1.8,-1.1,-1.6],[-1.2,-2.1,-1.1,-1.8],[-2.3,-1.8,-2.2,-1.8],[-2.2,-1.8,-2.1,-1.9],[-0.8,-2.5,-0.9,-2.5],[-1.0,-2.6,-1.0,-2.5],[-1.1,-2.4,-1.0,-2.5],[-1.2,-2.3,-1.1,-2.4],[1.8,-4.0,1.9,-4.1],[2.2,-4.8,2.2,-4.7],[2.4,-4.4,2.3,-4.5],[2.0,-4.1,2.1,-4.2],[1.9,-3.9,2.0,-3.8],[2.0,-3.7,2.0,-3.8],[1.8,-4.0,1.8,-3.9],[1.9,-3.2,2.0,-3.3],[2.2,-3.3,2.0,-3.3],[2.3,-3.4,2.3,-3.3],[2.2,-3.5,2.1,-3.5],[-0.5,-2.1,-0.4,-2.0],[-0.4,-1.9,-0.4,-2.0],[1.8,-3.1,1.8,-3.2],[2.4,-2.8,2.3,-2.7],[2.5,-2.9,2.4,-2.8],[2.1,-2.6,2.2,-2.6],[-2.5,2.2,-2.4,2.2],[-2.4,2.4,-2.4,2.3],[-1.5,3.9,-1.5,4.0],[-2.5,2.7,-2.5,2.6],[-2.5,2.6,-2.5,2.5],[-2.5,2.8,-2.5,3.0],[-2.1,3.3,-2.0,3.3],[-2.0,3.6,-2.1,3.7],[-2.3,3.6,-2.3,3.5],[-2.5,3.6,-2.4,3.6],[-2.2,3.4,-2.1,3.3],[-2.2,3.8,-2.3,3.8],[-2.3,3.9,-2.4,3.9],[-2.0,3.9,-2.1,3.9],[-2.2,3.7,-2.2,3.8],[-2.1,3.9,-2.2,3.9],[-1.9,3.5,-2.0,3.6],[-1.9,3.4,-1.9,3.5],[-1.8,3.9,-2.0,3.9],[-0.7,3.8,-0.8,3.8],[-0.8,3.9,-0.8,3.8],[-0.9,2.6,-0.9,2.5],[-1.0,2.5,-1.0,2.6],[-1.0,2.5,-0.9,2.5],[-1.0,2.6,-1.0,2.7],[-1.3,4.1,-1.5,4.1],[-1.0,4.1,-1.2,4.1],[-0.9,4.1,-1.0,4.1],[-0.8,4.0,-0.8,3.9],[-0.5,3.6,-0.4,3.6],[-0.5,3.6,-0.5,3.7],[-0.4,3.6,-0.3,3.7],[1.5,1.0,1.5,0.9],[1.5,0.8,1.4,0.9],[1.5,1.0,1.6,1.0],[1.5,0.8,1.4,0.6],[1.7,1.2,1.7,1.3],[1.7,1.3,1.7,1.5],[1.6,1.7,1.5,1.7],[1.6,1.7,1.7,1.6],[1.4,1.8,1.5,1.9],[1.5,2.4,1.5,2.1],[1.5,2.0,1.5,2.1],[0.0,3.9,-0.1,3.8],[-0.2,3.7,-0.1,3.8],[0.6,4.0,0.6,3.8],[0.4,4.0,0.2,4.0],[0.1,4.0,0.2,4.0],[0.6,4.0,0.5,4.0],[1.5,2.6,1.5,2.7],[1.5,3.1,1.5,3.0],[1.5,2.8,1.5,3.0],[1.5,2.6,1.5,2.5],[1.5,2.4,1.5,2.5],[1.1,3.7,0.8,3.8],[1.2,3.2,1.1,3.3],[1.3,3.2,1.2,3.2],[1.2,3.5,1.1,3.3],[1.4,3.2,1.5,3.3],[1.3,3.6,1.4,3.5],[1.1,3.7,1.3,3.7],[1.2,3.5,1.3,3.5],[1.4,3.7,1.3,3.7],[1.6,3.7,1.4,3.7],[1.5,3.5,1.4,3.5],[-9.6,1.5,-9.6,1.3],[-9.9,1.4,-9.8,1.5],[-9.8,1.6,-9.7,1.7],[-9.7,1.7,-9.6,1.7],[-9.9,1.7,-9.8,1.6],[-9.9,1.7,-9.9,1.9],[-9.9,2.0,-9.9,1.9],[-9.6,2.0,-9.7,1.9],[-9.6,1.8,-9.7,1.7],[-9.6,2.1,-9.6,2.2],[-9.5,2.7,-9.5,2.6],[-9.5,2.5,-9.6,2.3],[-9.6,2.3,-9.6,2.2],[-9.0,2.7,-9.2,2.7],[-9.0,2.8,-9.0,2.9],[-9.0,2.9,-9.0,3.0],[-9.2,2.7,-9.3,2.7],[-9.0,3.2,-9.0,3.3],[-9.0,3.5,-9.0,3.3],[-9.0,3.2,-9.0,3.1],[-9.4,4.2,-9.4,4.0],[-9.5,3.8,-9.4,4.0],[-9.0,3.7,-9.1,3.7],[-9.3,3.7,-9.2,3.8],[-9.1,4.4,-9.2,4.4],[-9.3,4.3,-9.4,4.2],[-9.2,4.4,-9.3,4.3],[-8.7,4.3,-9.1,4.4],[-8.4,4.3,-8.6,4.3],[-8.1,4.3,-8.1,4.4],[-8.2,4.9,-8.1,4.8],[-8.2,4.3,-8.4,4.3],[-7.8,4.4,-7.9,4.5],[-7.9,4.5,-8.0,4.5],[-7.8,4.4,-7.6,4.4],[-7.5,4.4,-7.4,4.3],[-6.8,4.2,-6.9,4.3],[-7.1,4.3,-7.2,4.3],[-6.9,4.3,-7.0,4.3],[-7.0,4.3,-7.1,4.3],[-6.6,4.2,-6.7,4.3],[-6.5,4.3,-6.5,4.2],[-6.3,4.4,-6.2,4.3],[-6.1,4.3,-6.2,4.3],[-6.0,4.3,-5.9,4.3],[-6.0,4.3,-6.1,4.3],[-2.3,-12.0,-2.3,-11.9],[-1.7,-12.4,-1.7,-12.2],[-2.0,-11.4,-2.1,-11.5],[-2.2,-11.3,-2.3,-11.4],[-2.2,-11.3,-2.2,-11.1],[-2.2,-11.1,-1.7,-11.0],[-2.5,-10.7,-2.5,-10.6],[-2.4,-10.8,-2.4,-11.0],[-2.5,-10.5,-2.5,-10.6],[-2.5,-10.7,-2.4,-10.8],[-1.7,-11.0,-1.6,-11.3],[-1.6,-11.5,-1.6,-11.3],[-1.6,-11.0,-1.7,-11.0],[-1.5,-11.0,-1.4,-11.0],[-1.3,-11.0,-1.2,-11.0],[-1.1,-10.7,-1.2,-10.4],[-2.1,-11.8,-2.1,-11.7],[-2.2,-11.6,-2.1,-11.5],[-2.2,-11.7,-2.2,-11.6],[-2.1,-11.5,-2.1,-11.7],[-2.3,-11.0,-2.2,-11.0],[-2.4,-11.0,-2.3,-11.0],[-1.1,-10.9,-1.1,-10.7],[-2.4,-9.8,-2.5,-9.9],[-2.5,-9.9,-2.5,-10.1],[-2.4,-10.2,-2.5,-10.1],[-1.4,-10.0,-1.3,-10.1],[-1.5,-9.9,-1.4,-10.0],[-2.5,-9.3,-2.5,-9.4],[-1.5,-9.7,-1.5,-9.8],[-2.3,-10.4,-2.4,-10.4],[-2.4,-10.4,-2.5,-10.5],[-2.3,-10.2,-2.3,-10.4],[-1.3,-10.1,-1.3,-10.2],[-2.4,-9.8,-2.3,-9.7],[-2.3,-9.5,-2.3,-9.6],[-2.3,-9.5,-2.4,-9.4],[-1.1,-9.7,-0.9,-9.7],[-1.5,-9.7,-1.1,-9.7],[-0.1,-9.7,-0.2,-9.7],[-1.2,-10.3,-1.2,-10.4],[-1.2,-10.3,-1.2,-10.2],[-0.9,-9.7,-0.8,-9.7],[-0.7,-9.7,-0.5,-9.7],[-0.3,-9.7,-0.4,-9.7],[-0.2,-9.7,-0.3,-9.7],[-2.4,-9.1,-2.5,-9.1],[-2.2,-8.9,-2.4,-9.0],[-2.4,-9.1,-2.4,-9.0],[-2.1,-8.9,-2.2,-9.0],[-2.4,-8.8,-2.4,-8.7],[-2.3,-8.7,-2.2,-8.7],[-2.2,-8.8,-2.4,-8.8],[-2.1,-8.7,-2.2,-8.7],[-2.2,-8.5,-2.1,-8.6],[-2.2,-8.5,-2.3,-8.5],[-2.2,-8.5,-2.2,-8.4],[-2.2,-8.3,-2.2,-8.4],[-2.4,-8.3,-2.5,-8.4],[-2.4,-7.6,-2.5,-7.5],[-2.4,-7.6,-2.5,-7.7],[-2.4,-6.9,-2.5,-6.8],[-2.3,-7.0,-2.4,-6.9],[-2.3,-7.1,-2.4,-7.0],[-2.5,-7.0,-2.4,-7.0],[-2.4,-6.8,-2.4,-6.7],[-0.2,-7.2,-0.2,-7.1],[-0.3,-7.2,-0.3,-7.3],[-0.5,-7.1,-0.4,-7.2],[-0.1,-7.7,-0.1,-7.6],[-0.5,-7.1,-0.5,-7.0],[-0.5,-6.9,-0.5,-6.8],[-0.5,-6.7,-0.5,-6.8],[-0.5,-6.6,-0.4,-6.6],[-0.6,-6.6,-0.7,-6.6],[-0.3,-6.9,-0.2,-7.0],[-0.3,-6.9,-0.2,-7.1],[-0.3,-6.6,-0.2,-6.6],[-2.4,-6.5,-2.3,-6.5],[-2.3,-6.5,-2.3,-6.4],[-2.2,-6.2,-2.2,-6.1],[-2.4,-6.2,-2.4,-6.1],[-1.9,-5.9,-2.0,-5.8],[-1.9,-5.7,-2.0,-5.8],[-1.9,-6.2,-2.0,-6.0],[-1.9,-6.0,-1.9,-6.1],[-2.2,-6.1,-2.1,-6.2],[-1.5,-6.4,-1.6,-6.2],[-1.5,-6.4,-1.3,-6.4],[-1.2,-6.4,-1.3,-6.4],[-1.8,-5.7,-1.9,-5.7],[-1.8,-6.0,-1.8,-5.7],[-2.5,-5.2,-2.3,-5.2],[-2.3,-5.1,-2.3,-5.2],[-2.2,-4.9,-2.1,-5.1],[-2.2,-4.9,-2.3,-5.1],[-1.8,-5.0,-1.9,-5.0],[-1.3,-5.2,-1.4,-5.2],[-1.5,-4.9,-1.4,-5.0],[-1.4,-5.1,-1.4,-5.0],[-1.4,-5.1,-1.4,-5.2],[-0.8,-6.3,-0.9,-6.3],[-0.7,-6.2,-0.7,-6.5],[-0.9,-6.3,-1.1,-6.4],[-0.9,-6.0,-0.8,-6.0],[-0.5,-6.5,-0.4,-6.5],[-0.7,-5.8,-0.6,-5.8],[-1.0,-5.3,-1.0,-5.4],[-0.7,-5.5,-0.7,-5.3],[-1.3,-5.2,-1.2,-5.0],[-1.1,-5.1,-1.0,-5.2],[-0.7,-5.1,-0.7,-5.3],[-0.1,-5.3,-0.1,-5.4],[-0.6,-5.0,-0.7,-5.0],[-2.2,-6.3,-2.2,-6.2],[-1.6,-6.2,-1.6,-6.1],[-1.7,-6.0,-1.7,-6.1],[-1.6,-6.1,-1.7,-6.1],[-1.9,-5.0,-2.0,-5.0],[-2.1,-5.1,-2.0,-5.0],[-1.5,-4.9,-1.7,-5.0],[-0.7,-6.2,-0.8,-6.3],[-0.8,-6.0,-0.8,-5.9],[-0.4,-6.4,-0.4,-6.3],[-0.6,-6.0,-0.5,-6.3],[-0.6,-5.9,-0.6,-5.8],[-0.6,-6.0,-0.6,-5.9],[-1.0,-5.4,-1.0,-5.5],[-1.1,-5.1,-1.1,-5.0],[-0.7,-5.5,-0.6,-5.6],[-0.6,-5.2,-0.6,-5.6],[-0.6,-5.0,-0.6,-5.1],[-0.2,-5.3,-0.2,-5.2],[-4.7,1.5,-4.6,1.7],[-4.7,1.5,-4.7,1.4],[-4.6,1.8,-4.6,1.7],[-4.6,2.1,-4.6,1.8],[-4.6,2.2,-4.6,2.3],[-4.4,2.4,-4.4,2.3],[-4.4,2.2,-4.3,2.2],[-4.6,2.5,-4.6,2.3],[-4.4,2.4,-4.4,2.7],[-4.4,2.9,-4.4,2.8],[-4.4,2.7,-4.4,2.8],[-4.6,2.8,-4.6,2.7],[-4.6,2.7,-4.6,2.5],[-3.7,1.7,-3.7,1.4],[-3.7,1.7,-3.7,1.8],[-3.3,2.0,-3.4,1.9],[-3.3,2.3,-3.3,2.2],[-3.4,1.9,-3.4,1.8],[-3.5,1.9,-3.6,1.8],[-3.6,2.1,-3.7,2.0],[-3.7,2.1,-3.7,2.0],[-4.1,2.2,-4.0,2.2],[-4.3,2.2,-4.1,2.2],[-3.7,2.1,-3.8,2.1],[-4.0,2.2,-3.8,2.1],[-3.5,2.2,-3.5,2.1],[-3.4,2.4,-3.3,2.3],[-3.5,2.3,-3.5,2.5],[-3.3,2.2,-3.3,2.0],[-2.9,1.4,-2.8,1.4],[-2.8,1.4,-2.8,1.5],[-2.6,1.5,-2.6,1.8],[-2.6,1.5,-2.6,1.3],[-2.6,1.8,-2.6,2.0],[-2.5,2.1,-2.6,2.0],[-2.8,2.0,-2.8,1.6],[-2.8,2.0,-2.7,2.4],[-2.8,2.8,-2.7,2.7],[-2.7,2.7,-2.7,2.5],[-5.7,4.2,-5.8,4.3],[-5.3,4.1,-5.6,4.2],[-5.6,4.2,-5.7,4.1],[-5.3,4.1,-5.2,4.0],[-4.6,2.9,-4.5,3.1],[-4.4,3.1,-4.5,3.1],[-4.4,2.9,-4.4,3.0],[-4.7,3.8,-4.6,3.7],[-4.8,3.8,-4.9,3.8],[-4.9,4.0,-4.9,3.9],[-4.4,3.8,-4.5,3.7],[-4.6,3.7,-4.5,3.7],[-4.3,3.9,-4.4,3.8],[-2.8,3.9,-2.9,3.9],[-4.2,4.0,-4.1,4.0],[-3.6,4.0,-3.7,4.0],[-3.4,4.0,-3.5,4.0],[-3.8,4.0,-4.0,4.0],[-3.5,4.0,-3.6,4.0],[-4.1,4.0,-4.0,4.0],[-2.8,3.0,-2.7,3.0],[-3.1,4.0,-3.2,4.0],[-3.2,4.0,-3.4,4.0],[-2.5,3.7,-2.7,3.7],[-2.7,3.9,-2.8,3.9],[-2.7,3.7,-2.7,3.8],[0.0,-9.7,0.1,-9.6],[0.1,-9.6,0.4,-9.7],[0.6,-9.7,0.7,-9.7],[0.5,-9.7,0.6,-9.7],[0.8,-9.5,0.8,-9.6],[1.0,-9.5,0.9,-9.5],[0.2,-8.8,0.0,-8.8],[0.3,-8.8,0.2,-8.8],[0.2,-8.5,0.2,-8.4],[0.1,-8.4,0.2,-8.4],[-0.0,-8.8,0.0,-8.7],[-0.0,-8.4,0.1,-8.4],[0.2,-8.5,0.1,-8.5],[0.2,-8.7,0.0,-8.7],[0.2,-7.8,0.1,-7.8],[0.1,-7.8,-0.0,-7.7],[0.1,-7.6,-0.0,-7.6],[0.2,-7.7,0.3,-7.7],[-0.0,-6.9,-0.1,-7.0],[0.0,-6.9,0.1,-6.8],[0.1,-6.8,-0.0,-6.6],[0.8,-6.8,0.6,-6.8],[0.5,-6.7,0.4,-6.7],[0.5,-6.7,0.6,-6.8],[0.4,-6.6,0.5,-6.6],[0.5,-6.6,0.6,-6.5],[0.8,-6.7,0.9,-6.7],[0.8,-6.6,0.9,-6.6],[0.6,-6.0,0.6,-5.9],[0.6,-6.0,0.7,-6.1],[1.0,-6.0,0.9,-6.1],[0.0,-5.3,-0.1,-5.3],[0.2,-5.2,0.0,-5.3],[0.1,-5.1,0.0,-5.1],[0.0,-5.1,-0.1,-5.1],[0.4,-5.2,0.3,-5.2],[0.4,-5.1,0.4,-5.2],[0.8,-6.3,0.6,-6.4],[0.7,-6.3,0.7,-6.2],[1.2,-10.9,1.3,-10.9],[1.5,-10.8,1.3,-10.9],[1.5,-10.8,1.6,-10.8],[1.2,-10.8,1.2,-10.2],[1.2,-10.2,1.2,-10.1],[1.9,-10.4,1.9,-10.0],[1.2,-10.1,1.1,-9.8],[1.1,-9.5,1.1,-9.6],[1.9,-10.0,1.9,-9.9],[1.8,-10.8,1.9,-10.8],[1.9,-10.4,1.9,-10.6],[1.9,-10.8,1.9,-10.6],[1.6,-10.8,1.8,-10.8],[1.1,-9.6,1.1,-9.7],[1.9,-9.7,1.9,-9.6],[1.9,-9.7,1.9,-9.9],[1.9,-9.1,1.9,-9.2],[1.9,-9.5,1.9,-9.2],[1.9,-8.4,2.0,-8.3],[1.8,-8.1,1.9,-8.2],[1.9,-8.8,1.9,-8.9],[1.9,-8.7,1.9,-8.8],[1.9,-8.9,1.9,-9.1],[2.0,-8.4,2.0,-8.5],[1.8,-8.1,1.8,-7.9],[1.1,-7.2,1.0,-7.1],[1.7,-7.2,1.5,-7.2],[1.4,-7.2,1.2,-7.2],[1.8,-7.9,1.9,-7.7],[1.9,-7.4,1.8,-7.3],[1.9,-7.4,1.9,-7.5],[1.1,-6.9,1.0,-7.0],[1.1,-6.9,1.1,-6.7],[1.0,-7.0,1.0,-7.1],[1.1,-6.4,1.0,-6.4],[1.1,-6.3,1.1,-6.4],[1.1,-6.0,1.1,-6.2],[1.1,-6.3,1.1,-6.2],[1.1,-5.8,1.1,-5.7],[1.0,-6.0,1.0,-5.9],[1.1,-6.0,1.1,-5.9],[1.0,-5.6,1.1,-5.7],[1.0,-5.4,1.0,-5.5],[1.1,-5.3,1.2,-5.2],[1.4,-5.2,1.5,-5.2],[1.3,-5.2,1.4,-5.2],[1.5,-5.2,1.6,-5.3],[1.7,-5.2,1.6,-5.2],[1.7,-5.1,1.8,-5.1],[2.1,-4.8,2.0,-4.9],[2.0,-4.9,2.0,-5.0],[1.8,-5.1,2.0,-5.1],[2.0,-5.0,2.0,-5.1]],"route":[[-0.01,-0.02],[0.11,-0.02],[0.15,-0.08],[-0.12,-0.32],[-0.29,-0.46],[-0.59,-0.46],[-0.89,-0.39],[-1.17,-0.07],[-1.36,0.27],[-1.45,0.7],[-1.45,1.18],[-1.53,1.66],[-1.59,2.23],[-1.66,2.65],[-1.9,2.68],[-2.02,2.7],[-2.02,2.7],[-1.88,2.66],[-1.82,2.65],[-1.79,2.67],[-1.9,2.82],[-1.87,2.94],[-2.15,3.09],[-2.55,3.24],[-2.45,3.22],[-2.33,3.1],[-2.66,3.22],[-3.17,3.15],[-3.68,3.1],[-4.04,2.99],[-4.18,3.15],[-4.12,3.12],[-4.04,3.12],[-4.0,3.13],[-4.01,3.15],[-4.06,3.23],[-4.03,3.31],[-4.02,3.35],[-4.03,3.35],[-4.01,3.35],[-4.0,3.25],[-3.93,3.16],[-3.51,3.17],[-3.03,3.16],[-2.57,3.15],[-2.13,3.07],[-1.89,2.7],[-1.62,2.35],[-1.47,1.99],[-1.34,1.6],[-1.39,1.27],[-1.32,1.02],[-1.29,0.76],[-1.34,0.43],[-1.25,0.09],[-1.16,-0.2],[-0.92,-0.34],[-0.74,-0.51],[-0.93,-0.81],[-1.22,-1.09],[-1.4,-1.46],[-1.56,-1.95],[-1.68,-2.28],[-1.9,-2.61],[-2.26,-2.92],[-2.64,-3.07],[-3.07,-3.11],[-3.46,-3.19],[-3.81,-3.26],[-4.13,-3.37],[-4.48,-3.41],[-4.81,-3.45],[-5.14,-3.53],[-5.47,-3.53],[-5.81,-3.46],[-6.12,-3.27],[-6.36,-3.05],[-6.58,-2.82],[-6.71,-2.5],[-6.83,-2.19],[-6.93,-1.92],[-6.95,-1.57],[-6.94,-1.26],[-6.9,-1.02],[-6.78,-0.7],[-6.65,-0.43],[-6.51,-0.16],[-6.35,0.09],[-6.19,0.38],[-5.97,0.64],[-5.77,0.78],[-5.63,1.01],[-5.52,1.25],[-5.48,1.48],[-5.54,1.77],[-5.48,2.03],[-5.42,2.3],[-5.46,2.59],[-5.53,2.9],[-5.66,3.11],[-5.93,3.24],[-6.23,3.29],[-6.49,3.27],[-6.7,3.25],[-6.96,3.25],[-7.24,3.41],[-7.55,3.36],[-7.77,3.32],[-7.99,3.29],[-8.18,3.22],[-8.3,2.98],[-8.41,2.72],[-8.46,2.44],[-8.57,2.11],[-8.64,1.83],[-8.62,1.52],[-8.53,1.25],[-8.23,1.24],[-7.93,1.29],[-7.59,1.38],[-7.15,1.44],[-6.75,1.43],[-6.44,1.54],[-6.1,1.62],[-5.73,1.77],[-5.43,2.07],[-5.11,2.36],[-4.93,2.68],[-4.91,2.76],[-4.94,2.94],[-4.93,2.97],[-4.92,2.93],[-4.99,2.66],[-5.1,2.38],[-5.2,2.13],[-5.19,2.12],[-5.15,2.36],[-5.13,2.67],[-5.01,2.97],[-4.91,3.24],[-4.58,3.3],[-4.26,3.35],[-3.86,3.25],[-3.49,3.09],[-3.27,2.89],[-3.22,2.81],[-3.14,2.5],[-3.15,2.18],[-3.24,1.96],[-3.37,1.87],[-3.55,1.8],[-3.8,1.75],[1.37,-10.23],[1.39,-10.12],[1.31,-10.25],[1.22,-10.38],[1.2,-10.39],[1.33,-10.17],[1.42,-10.12],[1.5,-10.05],[1.55,-9.82],[1.52,-9.58],[1.46,-9.26],[1.29,-8.95],[1.06,-8.54],[0.97,-8.38],[1.06,-8.44],[1.21,-8.56],[1.35,-8.68],[1.38,-8.7],[1.43,-8.81],[1.4,-9.03],[1.49,-9.36],[1.51,-9.49],[1.48,-9.28],[1.44,-9.02],[1.41,-8.87],[1.16,-8.82],[0.78,-8.91],[0.42,-8.99],[0.02,-9.2],[-0.44,-9.19],[-0.94,-9.18],[-1.23,-9.05],[-1.49,-9.11],[-1.65,-9.34],[-1.64,-9.67],[-1.7,-9.63],[-1.62,-9.47],[-1.51,-9.36],[-1.43,-9.3],[-1.42,-9.38],[-1.41,-9.35],[-1.35,-9.07],[-1.24,-8.92],[-1.18,-8.7],[-1.28,-8.31],[-1.26,-8.0],[-1.46,-7.76],[-1.59,-7.43],[-1.85,-7.35],[-1.91,-7.31],[-1.92,-7.31],[-1.93,-7.3],[-1.94,-7.3],[-1.94,-7.3],[-1.94,-7.3]]},{"name":"Upper","floor":2.0,"bounds":[-11.51,4.21,-13.38,6.44],"walls":[[-2.3,-1.5,-2.4,-1.5],[-2.0,-1.5,-2.3,-1.5],[-1.9,-1.5,-2.0,-1.5],[-2.3,-0.9,-2.3,-0.8],[-2.3,-0.9,-2.2,-0.9],[-2.0,-1.0,-1.9,-1.0],[-1.9,-0.8,-1.9,-0.9],[-2.3,-0.6,-2.3,-0.7],[-1.6,-1.1,-1.7,-1.0],[-1.5,-1.5,-1.4,-1.6],[-1.6,-1.5,-1.9,-1.5],[-1.9,-0.6,-1.9,-0.8],[-1.8,-0.6,-1.7,-0.5],[-1.9,-0.6,-1.8,-0.6],[-1.3,-0.6,-1.4,-0.5],[-2.3,-0.1,-2.3,0.0],[-1.5,-0.4,-1.4,-0.5],[-1.7,-0.5,-1.6,-0.5],[-1.5,-0.4,-1.6,-0.5],[-2.3,0.3,-2.3,0.0],[-2.3,0.6,-2.3,0.5],[-1.1,-1.4,-1.1,-1.6],[-0.9,-1.0,-1.1,-1.1],[-1.2,-1.2,-1.1,-1.4],[-1.1,-1.1,-1.1,-1.2],[-1.2,-0.8,-1.0,-0.8],[-1.3,-0.6,-1.2,-0.7],[-1.0,-0.8,-0.9,-0.8],[-0.8,-0.8,-0.7,-0.8],[-0.9,-0.8,-0.8,-0.8],[-0.9,-1.0,-0.8,-1.0],[-0.4,-1.1,-0.3,-1.1],[-0.3,-0.9,-0.4,-0.9],[-0.7,-1.0,-0.8,-1.0],[-0.5,-0.9,-0.4,-0.9],[-0.5,-1.1,-0.6,-1.0],[-2.1,-1.0,-2.1,-1.1],[-2.3,-0.6,-2.3,-0.4],[-2.3,-0.1,-2.3,-0.3],[-2.3,-0.3,-2.3,-0.4],[-2.3,0.4,-2.3,0.5],[-2.3,0.3,-2.3,0.4],[-0.3,-1.4,-0.3,-1.2],[-0.3,-0.9,-0.2,-1.0],[-0.5,-0.9,-0.7,-0.8],[0.1,-1.3,-0.0,-1.3],[0.2,-1.4,0.1,-1.3],[0.2,-1.4,0.3,-1.4],[-0.2,-0.7,-0.2,-0.6],[-0.2,-0.9,-0.2,-0.7],[0.8,-1.4,0.4,-1.4],[0.3,-1.4,0.4,-1.4],[0.8,-1.4,1.0,-1.4],[0.6,-0.5,0.6,-0.6],[0.7,-0.7,0.6,-0.7],[0.6,-1.0,0.4,-1.0],[0.7,-0.8,0.7,-0.7],[-0.1,-0.5,0.1,-0.5],[0.8,-0.5,1.0,-0.5],[1.0,-1.4,1.1,-1.4],[1.0,-0.9,0.9,-1.0],[1.9,-1.6,2.0,-1.5],[2.0,-1.5,1.9,-1.4],[1.9,-1.4,1.8,-1.4],[1.1,-0.1,1.0,-0.1],[1.3,-0.2,1.2,-0.1],[0.9,0.1,1.0,0.0],[1.0,0.0,1.1,-0.0],[1.4,-0.3,1.3,-0.2],[1.5,-0.1,1.6,-0.2],[1.5,-0.5,1.6,-0.5],[1.6,-0.4,1.6,-0.3],[1.2,0.1,1.2,-0.0],[1.5,0.2,1.4,0.3],[1.6,0.2,1.6,0.3],[1.5,0.4,1.6,0.3],[1.5,0.5,1.4,0.4],[1.4,0.5,1.2,0.6],[-0.2,-1.3,-0.2,-1.4],[-0.1,-1.3,-0.2,-1.3],[0.2,-0.5,0.3,-0.6],[0.7,-1.0,0.8,-1.0],[1.1,-0.8,0.8,-0.8],[0.6,-0.5,0.8,-0.5],[1.3,-1.4,1.2,-1.4],[1.3,-1.3,1.3,-1.4],[1.1,-0.8,1.0,-0.9],[1.7,-1.3,1.8,-1.4],[1.7,-1.3,1.4,-1.3],[1.1,-0.5,1.4,-0.5],[1.6,-0.5,1.6,-0.4],[1.5,-0.5,1.4,-0.5],[1.2,0.2,1.2,0.3],[-9.8,0.9,-9.8,1.0],[-9.1,-0.2,-9.1,-0.5],[-9.1,-0.5,-9.1,-0.6],[-8.6,-0.7,-8.5,-0.7],[-9.0,-0.7,-8.9,-0.7],[-8.9,-0.7,-8.7,-0.7],[-8.4,-0.7,-8.1,-0.7],[-8.5,-0.7,-8.4,-0.7],[-6.7,-1.3,-6.7,-1.4],[-6.8,-1.2,-6.7,-1.2],[-6.8,-0.7,-6.8,-0.8],[-6.8,-0.9,-6.8,-1.2],[-6.8,-0.8,-6.8,-0.9],[-7.4,-0.6,-7.2,-0.6],[-8.1,-0.7,-7.7,-0.6],[-7.7,-0.6,-7.5,-0.6],[-7.1,-0.6,-7.2,-0.6],[-7.0,-0.6,-6.8,-0.6],[-7.1,-0.6,-7.0,-0.6],[-9.1,0.5,-9.1,0.6],[-9.1,-0.1,-9.1,0.2],[-9.1,0.2,-9.1,0.4],[-9.1,0.8,-9.1,0.6],[-9.3,1.0,-9.2,0.9],[-9.4,1.3,-9.5,1.3],[-9.4,1.1,-9.5,1.2],[-6.0,-1.5,-6.0,-1.4],[-6.0,-1.4,-6.0,-1.2],[-6.0,-1.2,-6.0,-0.8],[-6.1,-0.4,-6.0,-0.5],[-6.1,-0.5,-6.1,-0.6],[-6.1,-0.6,-6.0,-0.7],[-5.8,-0.6,-5.8,-0.5],[-5.8,-0.5,-5.9,-0.4],[-5.8,-0.6,-5.7,-0.6],[-5.4,-0.6,-5.1,-0.6],[-5.5,-0.6,-5.6,-0.6],[-4.8,-0.6,-4.7,-0.6],[-5.0,-0.6,-4.9,-0.6],[-4.9,-0.6,-4.8,-0.6],[-4.4,-0.5,-4.4,-0.3],[-4.4,-0.3,-4.4,-0.1],[-4.7,-0.5,-4.5,-0.5],[-2.6,-1.5,-2.5,-1.5],[-4.4,0.2,-4.3,0.2],[-4.4,0.2,-4.4,-0.1],[-4.2,0.5,-4.2,0.4],[-4.2,0.6,-4.2,0.5],[-4.2,0.3,-4.2,0.4],[-4.2,0.7,-4.2,0.8],[-4.2,0.6,-4.2,0.7],[-4.2,1.0,-4.2,1.1],[-4.3,1.2,-4.2,1.1],[-4.4,1.3,-4.3,1.2],[-3.7,1.3,-3.6,1.3],[-3.9,1.3,-3.7,1.3],[-3.6,1.3,-3.5,1.3],[-3.5,1.3,-3.4,1.3],[-3.2,1.3,-3.3,1.3],[-3.2,1.3,-3.1,1.3],[-8.9,-2.6,-8.6,-2.5],[-9.2,-2.3,-9.2,-2.2],[-9.1,-2.5,-9.0,-2.5],[-9.0,-2.4,-9.1,-2.5],[-9.2,-2.2,-9.2,-2.1],[-9.2,-2.0,-9.1,-1.8],[-9.0,-1.6,-9.1,-1.7],[-8.7,-1.6,-9.0,-1.6],[-8.6,-1.6,-8.7,-1.6],[-8.5,-2.5,-8.3,-2.5],[-7.9,-2.5,-8.1,-2.5],[-7.9,-2.5,-7.7,-2.5],[-8.3,-2.5,-8.1,-2.5],[-8.4,-1.7,-8.6,-1.6],[-8.0,-1.6,-8.3,-1.6],[-7.8,-1.6,-7.6,-1.6],[-7.8,-1.6,-8.0,-1.6],[-7.1,-2.5,-7.0,-2.5],[-6.8,-1.6,-7.0,-1.6],[-7.3,-1.6,-7.4,-1.6],[-6.1,-2.4,-6.0,-2.4],[-6.8,-1.6,-6.7,-1.6],[-7.4,-2.5,-7.3,-2.5],[-7.5,-2.5,-7.6,-2.5],[-7.7,-2.5,-7.6,-2.5],[-7.5,-2.5,-7.4,-2.5],[-7.5,-1.6,-7.6,-1.6],[-7.3,-2.5,-7.2,-2.5],[-7.1,-2.5,-7.2,-2.5],[-7.2,-1.6,-7.3,-1.6],[-7.2,-1.6,-7.0,-1.6],[-6.7,-2.5,-6.8,-2.5],[-6.7,-2.5,-6.6,-2.5],[-6.6,-2.5,-6.3,-2.5],[-5.9,-2.4,-5.8,-2.4],[-5.9,-2.4,-6.0,-2.4],[-6.1,-2.4,-6.3,-2.4],[-6.7,-1.6,-6.6,-1.6],[-2.5,-9.6,-2.6,-9.7],[-2.6,-9.4,-2.6,-9.3],[-2.5,-9.2,-2.6,-9.3],[-2.6,-9.0,-2.6,-8.9],[-2.6,-8.6,-2.6,-8.4],[-2.6,-8.7,-2.6,-8.6],[-2.6,-8.2,-2.6,-8.1],[-2.6,-8.3,-2.6,-8.4],[-2.6,-7.9,-2.6,-8.0],[-2.7,-7.6,-2.6,-7.7],[-2.6,-7.9,-2.6,-7.8],[-2.7,-7.3,-2.7,-7.4],[-2.7,-7.3,-2.7,-7.2],[-2.7,-7.5,-2.7,-7.6],[-2.7,-6.8,-2.7,-7.0],[-2.6,-7.1,-2.7,-7.2],[-2.7,-7.0,-2.6,-7.1],[-2.7,-6.8,-2.7,-6.6],[-2.7,-6.6,-2.7,-6.4],[-2.7,-6.0,-2.7,-6.2],[-2.7,-6.0,-2.6,-6.0],[-2.7,-6.2,-2.7,-6.4],[-4.7,-4.3,-4.6,-4.3],[-4.7,-4.3,-4.8,-4.2],[-2.5,-4.6,-2.5,-4.4],[-2.5,-4.2,-2.5,-4.4],[-2.5,-4.2,-2.6,-4.1],[-2.6,-4.0,-2.6,-3.9],[-2.6,-4.0,-2.6,-4.1],[-5.4,-2.4,-5.5,-2.4],[-5.7,-2.7,-5.8,-2.8],[-5.1,-2.4,-5.0,-2.5],[-5.3,-2.4,-5.4,-2.4],[-5.2,-2.4,-5.1,-2.4],[-5.3,-2.4,-5.2,-2.4],[-5.0,-2.5,-4.8,-2.4],[-4.7,-2.4,-4.5,-2.4],[-4.5,-2.4,-4.4,-2.4],[-4.4,-2.4,-4.2,-2.4],[-5.8,-2.4,-5.7,-2.4],[-5.7,-2.4,-5.5,-2.4],[-5.8,-1.6,-5.6,-1.6],[-5.6,-1.6,-5.4,-1.6],[-5.4,-1.6,-5.2,-1.6],[-5.1,-1.6,-5.2,-1.6],[-4.4,-1.6,-4.7,-1.6],[-4.9,-1.6,-5.1,-1.6],[-4.7,-1.6,-4.9,-1.6],[-2.6,-2.9,-2.6,-3.1],[-2.6,-3.2,-2.6,-3.1],[-2.6,-3.2,-2.6,-3.3],[-2.6,-2.8,-2.6,-2.9],[-3.6,-1.6,-3.3,-1.5],[-3.6,-1.6,-3.8,-1.6],[-3.8,-1.6,-3.9,-1.6],[-3.9,-1.6,-4.1,-1.6],[-4.1,-1.6,-4.4,-1.6],[-4.2,-2.4,-3.8,-2.4],[-3.8,-2.4,-3.5,-2.4],[-3.5,-2.4,-3.0,-2.4],[-2.9,-2.4,-2.7,-2.4],[-2.9,-1.6,-3.2,-1.5],[-2.7,-1.5,-2.8,-1.5],[-2.6,-1.5,-2.7,-1.5],[-2.9,-1.6,-2.8,-1.5],[-2.3,-3.9,-2.4,-3.9],[-1.9,-3.8,-2.3,-3.9],[-2.5,-3.6,-2.3,-3.6],[-2.0,-3.6,-2.2,-3.6],[-1.7,-3.8,-1.9,-3.8],[-1.3,-3.8,-1.4,-3.8],[-1.5,-3.8,-1.7,-3.8],[-1.4,-3.8,-1.5,-3.8],[-1.0,-3.7,-1.1,-3.8],[-1.3,-3.8,-1.2,-3.8],[-1.0,-3.7,-1.0,-3.5],[-1.0,-3.3,-1.0,-3.4],[-1.0,-3.2,-1.0,-3.3],[-2.3,-2.4,-2.1,-2.4],[-2.3,-2.4,-2.5,-2.4],[-2.2,-2.8,-2.3,-2.7],[-2.5,-2.7,-2.3,-2.7],[-2.1,-2.8,-2.2,-2.8],[-2.0,-2.4,-1.9,-2.4],[-1.9,-2.4,-1.4,-2.4],[-1.9,-2.7,-2.1,-2.7],[-1.7,-2.8,-1.9,-2.7],[-1.5,-2.9,-1.5,-2.8],[-1.5,-2.8,-1.6,-2.8],[-1.0,-3.2,-1.0,-3.0],[-1.1,-2.8,-1.1,-2.9],[-1.0,-3.0,-1.1,-2.9],[-1.1,-2.7,-1.1,-2.8],[-1.1,-2.4,-1.1,-2.5],[-1.1,-2.5,-1.1,-2.6],[-1.1,-2.3,-1.1,-2.4],[-1.3,-2.4,-1.2,-2.3],[-1.3,-1.6,-1.4,-1.6],[-0.1,-3.8,-0.3,-3.8],[-0.4,-3.7,-0.3,-3.6],[-0.4,-3.7,-0.4,-3.8],[-0.2,-3.4,-0.0,-3.4],[-0.2,-3.4,-0.3,-3.5],[0.1,-3.5,0.1,-3.4],[0.1,-3.5,-0.0,-3.4],[0.4,-3.8,-0.0,-3.8],[0.7,-3.8,0.5,-3.8],[0.1,-3.4,0.3,-3.4],[0.4,-3.4,0.3,-3.4],[0.4,-3.4,0.5,-3.4],[0.7,-3.5,0.6,-3.5],[0.6,-3.5,0.5,-3.4],[1.7,-4.6,1.7,-4.8],[1.7,-4.4,1.7,-4.5],[1.7,-4.4,1.7,-4.2],[1.7,-4.2,1.7,-4.1],[1.2,-3.7,1.0,-3.8],[0.7,-3.5,0.9,-3.5],[1.0,-3.5,1.2,-3.5],[0.9,-3.5,1.0,-3.5],[0.7,-3.8,0.9,-3.8],[1.7,-3.9,1.7,-4.1],[1.7,-3.8,1.6,-3.7],[1.2,-3.7,1.4,-3.7],[1.7,-3.8,1.7,-3.9],[1.3,-3.5,1.4,-3.4],[1.7,-3.2,1.8,-3.2],[1.7,-3.3,1.7,-3.2],[1.7,-3.4,1.5,-3.4],[1.8,-3.2,1.8,-3.1],[1.8,-2.8,1.8,-3.1],[1.8,-2.6,1.8,-2.5],[1.8,-2.8,1.8,-2.6],[1.8,-2.1,1.8,-2.2],[1.8,-2.2,1.8,-2.4],[1.8,-1.9,1.9,-1.9],[1.9,-1.7,1.9,-1.8],[-2.2,1.1,-2.2,1.2],[-2.3,0.8,-2.3,0.7],[-2.2,1.1,-2.3,0.9],[-2.3,0.9,-2.3,0.8],[-2.2,1.2,-2.3,1.1],[-2.3,1.5,-2.3,1.4],[-2.3,1.1,-2.3,1.4],[-2.4,2.4,-2.4,2.3],[-2.4,1.7,-2.3,1.5],[-2.4,2.1,-2.4,1.8],[-2.4,1.8,-2.4,1.7],[-2.4,2.1,-2.4,2.3],[-1.0,1.1,-1.0,1.0],[-1.1,1.1,-1.1,1.0],[-1.1,1.1,-1.1,1.2],[-2.4,2.7,-2.3,2.8],[-2.4,2.9,-2.3,2.8],[-2.4,2.7,-2.4,2.4],[-1.9,3.5,-2.1,3.6],[-2.2,3.6,-2.1,3.6],[-2.5,3.7,-2.2,3.6],[-1.6,3.6,-1.7,3.7],[-1.5,3.5,-1.5,3.4],[-1.5,3.4,-1.7,3.4],[-1.5,3.8,-1.6,3.8],[-1.4,4.0,-1.5,3.9],[-1.6,3.8,-1.7,3.7],[-1.5,3.8,-1.5,3.9],[-1.4,4.0,-1.3,4.1],[-1.3,4.1,-1.2,4.1],[-1.1,4.1,-0.9,4.2],[-0.7,3.9,-0.6,3.9],[-0.3,3.9,-0.5,3.9],[-0.7,3.9,-0.9,4.2],[1.3,0.8,1.2,0.7],[1.6,0.8,1.6,0.9],[1.4,0.8,1.5,0.8],[1.6,0.9,1.6,1.0],[1.6,1.1,1.7,1.1],[1.9,1.3,1.8,1.2],[1.8,1.5,1.9,1.3],[1.8,1.2,1.7,1.2],[1.9,1.9,1.8,1.9],[1.9,1.9,1.9,1.7],[1.8,1.5,1.9,1.6],[1.7,2.0,1.6,2.0],[1.6,2.1,1.6,2.3],[0.9,3.9,0.8,3.9],[1.0,3.9,0.9,3.9],[1.3,3.9,1.2,3.9],[0.0,4.2,0.1,4.1],[-0.1,3.9,-0.2,3.9],[-0.1,4.0,-0.0,4.1],[0.6,4.2,0.6,4.1],[0.6,4.2,0.5,4.2],[0.5,4.2,0.3,4.2],[0.3,4.2,0.2,4.1],[1.6,2.7,1.6,2.8],[1.6,2.7,1.4,2.6],[1.5,2.5,1.4,2.5],[1.4,3.0,1.4,2.9],[1.4,2.9,1.6,2.8],[1.4,3.0,1.3,3.1],[1.2,3.2,1.3,3.1],[1.0,3.9,1.1,3.9],[0.7,4.0,0.6,4.1],[0.7,4.0,0.7,3.9],[0.8,3.9,0.7,3.9],[1.1,3.6,1.2,3.5],[1.2,3.4,1.2,3.5],[1.2,3.4,1.2,3.2],[1.4,3.9,1.5,3.9],[1.4,3.9,1.3,3.9],[1.4,3.8,1.3,3.8],[1.4,3.8,1.5,3.8],[1.5,3.9,1.5,3.8],[1.2,3.8,1.1,3.7],[-9.3,1.7,-9.4,1.7],[-9.4,1.7,-9.5,1.6],[-9.5,1.5,-9.5,1.6],[-9.2,2.0,-9.2,1.9],[-9.2,1.8,-9.3,1.7],[-9.2,2.2,-9.2,2.0],[-9.2,2.5,-9.2,2.3],[-9.2,2.6,-9.2,2.5],[-9.2,2.3,-9.2,2.2],[-9.2,3.0,-9.2,2.7],[-9.2,3.3,-9.2,3.1],[-9.2,3.5,-9.2,3.6],[-9.2,3.5,-9.2,3.3],[-9.2,3.7,-9.2,3.6],[-8.8,3.7,-8.9,3.7],[-9.0,3.7,-9.2,3.7],[-8.5,3.7,-8.7,3.7],[-8.4,3.7,-8.5,3.7],[-8.7,3.7,-8.8,3.7],[-8.2,3.8,-8.1,4.0],[-7.6,4.1,-7.7,4.1],[-7.7,4.1,-7.9,4.1],[-7.3,3.8,-7.2,3.7],[-7.4,4.0,-7.3,3.8],[-7.2,3.7,-7.0,3.7],[-6.6,3.7,-7.0,3.7],[-6.4,3.9,-6.5,3.8],[-6.4,3.9,-6.4,4.1],[-5.9,4.1,-6.0,4.1],[-6.1,4.1,-6.0,4.1],[-2.4,-9.5,-2.5,-9.6],[-2.2,-9.8,-2.0,-9.7],[-2.5,-9.8,-2.2,-9.8],[-2.0,-9.7,-1.9,-9.7],[-1.5,-9.7,-1.7,-9.7],[-1.4,-9.7,-1.3,-9.7],[-1.8,-9.7,-1.7,-9.7],[-1.9,-9.7,-1.8,-9.7],[-0.4,-11.2,-0.4,-11.3],[-0.4,-11.3,-0.5,-11.3],[-0.5,-11.3,-0.5,-11.4],[-0.4,-11.4,-0.4,-11.3],[-0.6,-11.1,-0.5,-11.1],[-0.5,-11.1,-0.4,-11.1],[-0.7,-11.0,-0.6,-11.1],[-0.7,-10.8,-0.7,-11.0],[-0.4,-11.1,-0.4,-11.3],[-0.3,-11.1,-0.3,-11.2],[-0.3,-11.3,-0.2,-11.3],[-0.2,-11.2,-0.2,-11.1],[-0.1,-10.6,-0.1,-10.4],[-0.1,-10.2,-0.1,-10.4],[-1.2,-9.7,-1.0,-9.7],[-1.3,-9.7,-1.2,-9.7],[-0.7,-9.7,-0.9,-9.7],[-0.1,-10.1,-0.1,-10.2],[-0.3,-9.7,-0.2,-9.7],[-0.6,-9.7,-0.5,-9.7],[-0.5,-9.7,-0.4,-9.7],[-0.4,-9.7,-0.3,-9.6],[-0.7,-9.7,-0.6,-9.7],[-2.5,-9.0,-2.4,-9.0],[-2.5,-9.1,-2.4,-9.1],[-2.5,-6.0,-2.3,-6.0],[-2.0,-6.0,-2.2,-6.0],[-2.2,-5.7,-1.9,-5.7],[-2.3,-5.7,-2.2,-5.7],[-1.5,-6.0,-1.7,-6.0],[-1.8,-6.0,-1.7,-6.0],[-2.0,-6.0,-1.8,-6.0],[-2.5,-5.5,-2.4,-5.7],[-2.5,-5.4,-2.5,-5.5],[-2.5,-5.2,-2.5,-5.4],[-2.5,-4.9,-2.5,-5.1],[-2.5,-5.2,-2.5,-5.1],[-1.9,-5.7,-1.8,-5.7],[-1.8,-5.7,-1.5,-5.6],[-1.4,-5.7,-1.3,-5.7],[-1.5,-5.6,-1.4,-5.7],[-0.7,-6.0,-1.0,-6.0],[-1.1,-6.0,-1.4,-6.0],[-0.6,-6.0,-0.7,-6.0],[-0.4,-6.0,-0.6,-6.0],[-0.1,-5.9,-0.1,-6.0],[-0.7,-5.7,-0.6,-5.7],[-1.0,-5.7,-0.8,-5.7],[-1.2,-5.7,-1.1,-5.7],[-0.6,-5.7,-0.5,-5.6],[-0.5,-5.3,-0.5,-5.4],[-0.4,-5.3,-0.3,-5.4],[-0.4,-5.6,-0.3,-5.6],[-0.3,-5.4,-0.2,-5.6],[-0.4,-5.3,-0.4,-5.4],[-0.4,-5.1,-0.5,-5.0],[-0.4,-5.1,-0.3,-5.0],[-0.5,-5.3,-0.6,-5.2],[-0.6,-5.0,-0.6,-5.1],[-0.3,-5.0,-0.2,-5.0],[-0.1,-5.1,-0.2,-5.0],[-0.1,-5.1,-0.1,-5.2],[-4.4,1.4,-4.4,1.3],[-4.4,1.5,-4.4,1.6],[-4.4,2.0,-4.4,1.9],[-4.4,1.6,-4.4,1.9],[-4.4,2.3,-4.4,2.4],[-4.4,2.3,-4.4,2.0],[-4.4,2.5,-4.4,2.7],[-4.0,1.4,-3.9,1.3],[-4.1,1.5,-4.0,1.4],[-4.1,1.8,-4.1,1.6],[-4.1,2.0,-4.1,1.8],[-4.1,2.2,-4.1,2.0],[-4.1,2.4,-4.1,2.2],[-4.1,2.6,-4.2,2.9],[-4.1,2.5,-4.1,2.4],[-2.6,1.4,-2.6,1.6],[-2.7,1.4,-2.6,1.4],[-2.6,1.7,-2.6,2.0],[-2.6,1.6,-2.6,1.7],[-2.6,2.0,-2.6,2.1],[-2.7,2.3,-2.6,2.1],[-2.7,2.7,-2.7,2.5],[-2.7,2.9,-2.7,2.7],[-2.7,2.5,-2.7,2.4],[-2.7,2.3,-2.7,2.4],[-5.7,4.1,-5.7,4.0],[-5.5,3.8,-5.6,3.8],[-5.6,3.9,-5.7,4.0],[-5.6,3.9,-5.6,3.8],[-5.7,4.1,-5.8,4.1],[-5.1,3.8,-5.0,3.8],[-5.5,3.8,-5.3,3.8],[-4.7,3.5,-4.8,3.4],[-4.8,3.4,-4.9,3.4],[-4.5,3.0,-4.3,3.0],[-4.9,3.5,-4.8,3.5],[-5.0,3.6,-4.9,3.5],[-4.9,3.8,-4.8,3.8],[-4.7,3.8,-4.8,3.8],[-4.8,3.7,-4.7,3.7],[-4.9,3.6,-4.9,3.7],[-4.6,3.5,-4.8,3.4],[-4.2,3.9,-4.2,4.0],[-4.2,4.0,-4.1,4.1],[-4.3,3.7,-4.2,3.8],[-4.3,3.7,-4.5,3.6],[-4.0,4.1,-4.1,4.1],[-4.0,4.1,-3.9,4.0],[-3.9,4.0,-3.8,4.0],[-3.5,4.1,-3.6,4.1],[-3.4,4.1,-3.5,4.1],[-2.6,3.0,-2.5,3.0],[-2.9,4.0,-2.9,3.9],[-3.2,4.0,-3.3,4.1],[-3.0,4.1,-2.9,4.0],[-2.9,3.8,-2.9,3.9],[-3.1,4.1,-3.2,4.0],[-2.7,3.7,-2.8,3.8],[-2.8,3.8,-2.9,3.8],[-2.5,3.7,-2.6,3.7],[0.7,-10.8,0.6,-10.8],[1.0,-10.8,0.8,-10.8],[0.1,-10.1,0.1,-10.0],[0.1,-10.1,-0.0,-10.1],[0.1,-10.8,0.3,-10.8],[0.1,-10.9,0.0,-11.0],[-0.0,-11.0,-0.1,-11.1],[0.6,-10.8,0.4,-10.8],[0.1,-9.7,0.1,-9.8],[0.1,-9.6,0.1,-9.7],[0.1,-10.0,0.1,-9.8],[0.2,-9.5,0.1,-9.4],[-0.1,-9.6,-0.0,-9.5],[1.0,-9.0,1.0,-9.1],[0.8,-9.0,0.8,-9.1],[0.7,-8.6,0.7,-8.7],[0.2,-9.5,0.2,-9.6],[0.8,-9.2,0.9,-9.3],[0.9,-9.3,0.9,-9.4],[0.7,-8.9,0.7,-9.0],[0.7,-8.9,0.7,-8.7],[0.8,-9.2,0.8,-9.1],[-0.1,-5.9,-0.0,-5.9],[0.9,-6.0,0.8,-5.9],[0.0,-5.5,-0.0,-5.4],[-0.0,-5.3,-0.1,-5.3],[0.0,-5.7,0.0,-5.9],[0.0,-5.5,0.0,-5.7],[0.9,-5.7,0.8,-5.7],[0.7,-5.7,0.8,-5.7],[1.0,-5.7,0.9,-5.7],[1.0,-10.8,1.6,-10.8],[1.9,-9.7,1.9,-9.6],[1.9,-10.0,1.9,-9.7],[1.9,-10.5,1.9,-10.7],[1.8,-10.7,1.9,-10.7],[1.6,-10.8,1.8,-10.7],[1.9,-10.4,1.9,-10.5],[1.9,-10.4,1.9,-10.1],[1.2,-9.5,1.1,-9.5],[1.1,-9.5,1.0,-9.5],[1.3,-9.5,1.2,-9.5],[1.4,-9.5,1.3,-9.5],[1.9,-10.0,1.9,-10.1],[1.9,-9.5,1.9,-9.6],[1.4,-9.5,1.8,-9.5],[1.0,-9.2,1.1,-9.2],[1.2,-9.2,1.3,-9.2],[1.4,-9.2,1.3,-9.2],[1.4,-9.2,1.5,-9.2],[1.9,-8.8,1.9,-9.0],[1.5,-9.2,1.7,-9.2],[1.7,-9.2,1.9,-9.1],[1.9,-8.7,1.9,-8.5],[1.9,-8.0,1.8,-7.8],[1.9,-8.3,1.9,-8.0],[1.9,-8.3,1.9,-8.5],[1.8,-7.5,1.8,-7.4],[1.7,-6.7,1.8,-6.7],[1.8,-6.5,1.8,-6.7],[1.8,-7.8,1.8,-7.7],[1.8,-7.7,1.8,-7.6],[1.8,-7.3,1.9,-7.2],[2.0,-7.2,2.0,-7.1],[2.1,-7.0,2.0,-7.1],[2.0,-6.8,1.9,-6.9],[2.1,-7.0,2.0,-7.0],[2.1,-6.9,2.0,-7.0],[2.1,-6.8,2.0,-6.8],[1.8,-6.3,1.8,-6.5],[1.7,-5.3,1.8,-5.3],[1.2,-5.7,1.1,-5.7],[1.1,-5.9,1.2,-5.9],[1.5,-5.6,1.4,-5.6],[1.3,-5.9,1.2,-5.9],[1.6,-6.0,1.5,-6.0],[1.6,-6.2,1.7,-6.2],[1.5,-5.7,1.7,-5.6],[1.3,-5.5,1.4,-5.5],[1.5,-5.3,1.5,-5.4],[1.3,-5.6,1.3,-5.5],[1.4,-5.5,1.4,-5.6],[1.6,-5.4,1.5,-5.4],[1.6,-5.4,1.7,-5.5],[1.5,-5.3,1.7,-5.3],[1.7,-5.5,1.7,-5.6],[1.8,-5.1,1.8,-5.3],[1.8,-4.9,1.8,-5.1]],"route":[[-3.89,1.75],[-4.05,2.03],[-4.12,2.54],[-4.02,2.86],[-3.96,3.13],[-3.89,3.29],[-4.22,3.37],[-4.76,3.22],[-5.5,2.97],[-5.91,2.83],[-6.64,2.62],[-7.32,2.5],[-7.89,2.3],[-8.21,2.24],[-8.35,2.03],[-8.32,1.99],[-8.13,2.1],[-8.02,2.32],[-7.7,2.53],[-7.3,2.55],[-7.21,2.6],[-7.21,2.66],[-7.13,2.71],[-6.52,2.68],[-5.79,2.59],[-5.46,2.39],[-5.38,1.88],[-5.61,1.41],[-5.55,0.66],[-6.03,0.34],[-6.68,0.17],[-7.11,0.09],[-7.55,0.22],[-7.64,0.55],[-7.49,0.79],[-7.24,0.73],[-6.68,0.51],[-6.34,0.22],[-6.33,-0.28],[-6.38,-0.93],[-6.38,-1.68],[-6.21,-1.95],[-5.92,-1.99],[-5.74,-1.99],[-5.74,-1.91],[-5.77,-1.91],[-5.78,-1.91],[-5.78,-1.91],[-5.45,-1.94],[-4.79,-1.97],[-3.96,-1.96],[-3.07,-1.96],[-2.32,-1.92],[-1.75,-2.0],[-0.94,-2.08],[-0.12,-2.25],[0.31,-2.6],[0.62,-2.71],[0.66,-2.61],[0.31,-2.62],[-0.02,-2.37],[-0.51,-2.1],[-0.42,-2.2],[-0.26,-2.44],[-0.35,-2.87],[-0.38,-3.21],[-0.64,-3.67],[-0.71,-3.79],[-0.7,-4.04],[-0.56,-4.33],[-0.01,-4.77],[0.52,-5.09],[0.9,-4.98],[0.56,-4.68],[0.24,-4.5],[-0.41,-4.53],[-0.91,-4.61],[-1.37,-4.51],[-1.74,-4.63],[-1.86,-4.95],[-1.83,-4.92],[-1.63,-4.74],[-1.25,-4.71],[-0.83,-4.65],[-0.35,-4.55],[0.11,-4.64],[0.45,-4.94],[0.78,-4.63],[0.68,-4.36],[0.13,-4.42],[-0.33,-4.54],[-0.58,-4.49],[-0.71,-4.76],[-0.77,-5.04],[-0.73,-5.27],[-0.81,-5.36],[-0.82,-5.27],[-0.89,-5.01],[-0.87,-4.65],[-0.65,-4.16],[-0.66,-3.56],[-0.66,-2.98],[-0.34,-2.44],[-0.2,-2.02],[-0.18,-1.96],[-0.56,-1.82],[-0.73,-1.83],[-0.93,-2.01],[-1.62,-1.91],[-2.23,-1.97],[-2.6,-1.9],[-2.64,-1.83],[-3.26,-1.85],[-3.89,-1.9],[-4.66,-1.94],[-5.42,-1.99],[-6.19,-2.02],[-6.95,-2.06],[-7.69,-2.13],[-8.25,-2.16],[-8.51,-2.1],[-8.33,-2.02],[-8.01,-2.03],[-7.64,-2.0],[-7.21,-2.01],[-6.61,-2.04],[-6.34,-1.73],[-6.28,-1.17],[-6.38,-0.56],[-6.7,-0.28],[-7.06,-0.05],[-7.55,0.08],[-7.86,0.31],[-7.78,0.52],[-7.55,0.61],[-7.18,0.56],[-6.58,0.59],[-5.97,0.49],[-5.56,0.31],[-5.21,0.13],[-4.96,0.35],[-4.86,0.55],[-4.99,0.88],[-5.29,0.97],[-5.52,1.04],[-5.43,1.37],[-5.5,1.78],[-5.49,2.15],[-5.97,2.35],[-6.39,2.56],[-7.05,2.71],[-7.56,2.81],[-7.97,2.81],[-8.08,2.7],[-7.95,2.67],[-7.82,2.65],[-7.89,2.66],[-8.02,2.61],[-8.22,2.55],[-8.1,2.47],[-8.13,2.63],[-8.15,2.84],[-8.04,2.94],[-7.61,2.85],[-7.13,2.8],[-6.53,2.74],[-5.88,2.76],[-5.14,2.65],[-5.33,2.97],[-5.03,3.08],[-4.48,3.19],[-4.22,3.17],[-4.09,3.25],[-3.61,3.35],[-2.92,3.38],[-2.24,3.23],[-1.75,2.92],[-1.4,2.38],[-1.03,1.75],[-0.46,1.51],[-0.15,0.89],[-0.37,0.34],[-0.69,-0.4],[-0.76,-0.49],[-0.72,-0.22],[-0.76,-0.88],[-0.7,-1.59],[-0.45,-2.17],[-0.31,-2.7],[-0.63,-3.45],[-0.41,-4.21],[0.23,-4.56],[0.54,-5.07],[0.54,-5.36],[0.44,-6.06],[0.48,-6.77],[0.35,-7.31],[0.29,-7.76],[0.12,-8.14],[-0.15,-8.38],[-0.53,-8.23],[-0.39,-8.06],[-0.07,-8.06],[-0.01,-8.18],[0.25,-8.65],[0.45,-9.13],[0.62,-9.59],[0.68,-10.08],[0.61,-10.3],[0.68,-10.36],[1.06,-10.37]]}],"points":[{"id":1,"storey":"Ground","floor":-0.25,"x":-5.74,"y":-3.48,"z":1.16,"yaw":270.0,"name":"Kitchen"},{"id":2,"storey":"Ground","floor":-0.25,"x":-6.49,"y":-0.13,"z":1.1,"yaw":15.0,"name":"Parlour"},{"id":3,"storey":"Ground","floor":-0.25,"x":-8.44,"y":2.67,"z":1.06,"yaw":180.0,"name":"Studio"},{"id":4,"storey":"Ground","floor":-0.25,"x":1.22,"y":-10.41,"z":2.14,"yaw":60.0,"name":"Back stairs"},{"id":5,"storey":"Ground","floor":-0.25,"x":-1.94,"y":-7.3,"z":0.93,"yaw":195.0,"name":"Hearth kitchen"},{"id":6,"storey":"Upper","floor":2.0,"x":-6.57,"y":0.2,"z":3.31,"yaw":15.0,"name":"Upper sitting room"},{"id":7,"storey":"Upper","floor":2.0,"x":-2.14,"y":-1.93,"z":3.54,"yaw":270.0,"name":"Beam room"},{"id":8,"storey":"Upper","floor":2.0,"x":-8.51,"y":-2.12,"z":3.27,"yaw":270.0,"name":"Upstairs hall"},{"id":9,"storey":"Upper","floor":2.0,"x":-8.23,"y":2.56,"z":3.11,"yaw":225.0,"name":"Fireplace room"},{"id":10,"storey":"Upper","floor":2.0,"x":-0.18,"y":0.6,"z":3.32,"yaw":30.0,"name":"Bedroom"},{"id":11,"storey":"Upper","floor":2.0,"x":-0.57,"y":-3.98,"z":3.41,"yaw":225.0,"name":"Store room"},{"id":12,"storey":"Upper","floor":2.0,"x":0.48,"y":-7.12,"z":3.54,"yaw":285.0,"name":"Gable room"}]};
 
   var roomsEl = document.getElementById("rooms"), planEl = document.getElementById("plan"),
       chartBody = document.getElementById("chart-body"), chartEl = document.getElementById("chart");
@@ -733,7 +1010,10 @@
   function jumpTo(p) {
     stopAssist();
     setMode("walk");
-    state.x = p.x; state.y = p.y; state.z = p.z;
+    state.x = p.x; state.y = p.y;
+    // The room point's own height is where the operator's camera was; what the
+    // viewer wants is to stand on that floor at their chosen height.
+    settleFrom(p.z - EYE);
     state.yaw = p.yaw; state.pitch = -4;
     currentRoom = p.id;
     document.querySelectorAll("[data-room]").forEach(function (b) {
@@ -818,6 +1098,11 @@
       pressOnly("[data-chart]", "data-chart", mode);
       chartBody.hidden = mode === "off";
       roomsEl.hidden = mode !== "rooms";
+      shotsEl.hidden = mode !== "shots";
+      shotsEmpty.hidden = mode !== "shots" || shots.length > 0;
+      // hidden is an HTMLElement property, and this is an <svg>: assigning it
+      // sets a dead expando and leaves the attribute -- and the element then
+      // reports hidden === false while CSS keeps it display:none.
       if (mode === "plan") { planEl.removeAttribute("hidden"); }
       else { planEl.setAttribute("hidden", ""); }
       if (mode === "plan") { planStorey = null; drawPlan(); }
@@ -832,7 +1117,8 @@
   // transport under the frame.
   var TOUR = [[-0.00,0.00,-0.00],[0.00,-0.00,-0.00],[0.13,0.01,0.81],[-0.19,-0.40,1.15],[-0.75,-0.45,1.19],[-1.25,0.09,1.21],[-1.45,0.95,1.21],[-1.56,2.02,1.16],[-1.86,2.72,1.14],[-2.03,2.71,1.11],[-1.82,2.64,1.14],[-1.90,2.82,1.17],[-2.18,3.11,1.20],[-2.42,3.20,1.19],[-2.78,3.24,1.17],[-3.83,3.07,1.11],[-4.16,3.14,1.07],[-4.03,3.13,1.11],[-4.03,3.20,1.17],[-4.03,3.34,1.16],[-4.02,3.35,1.15],[-3.97,3.16,1.14],[-3.08,3.15,1.16],[-2.13,3.07,1.19],[-1.61,2.32,1.20],[-1.34,1.55,1.22],[-1.29,0.95,1.23],[-1.33,0.32,1.26],[-1.10,-0.26,1.25],[-0.82,-0.69,1.26],[-1.32,-1.29,1.24],[-1.65,-2.14,1.15],[-2.17,-2.84,1.17],[-2.99,-3.09,1.20],[-3.79,-3.26,1.20],[-4.48,-3.41,1.18],[-5.15,-3.53,1.18],[-5.87,-3.44,1.16],[-6.42,-2.98,1.13],[-6.75,-2.40,1.13],[-6.93,-1.78,1.12],[-6.94,-1.13,1.13],[-6.70,-0.57,1.10],[-6.39,0.02,1.10],[-6.05,0.57,1.09],[-5.65,0.97,1.10],[-5.48,1.46,1.09],[-5.48,2.03,1.08],[-5.47,2.61,1.07],[-5.70,3.13,1.07],[-6.27,3.29,1.08],[-6.80,3.24,1.09],[-7.35,3.41,1.09],[-7.90,3.32,1.07],[-8.28,3.07,1.06],[-8.45,2.56,1.05],[-8.64,1.90,1.02],[-8.55,1.27,1.03],[-7.95,1.29,1.04],[-7.15,1.44,1.03],[-6.41,1.56,1.01],[-5.69,1.82,1.02],[-5.06,2.41,1.04],[-4.91,2.82,1.08],[-4.91,2.97,1.12],[-5.02,2.53,1.12],[-5.20,2.10,1.11],[-5.13,2.54,1.10],[-4.92,3.17,1.11],[-4.33,3.34,1.15],[-3.52,3.10,1.18],[-3.22,2.81,1.27],[-3.16,2.15,1.59],[-3.41,1.85,1.94],[-3.86,1.74,2.27],[-4.05,2.12,2.59],[-4.07,2.76,2.94],[-4.01,3.08,3.20],[-3.93,3.29,3.40],[-4.46,3.28,3.40],[-5.30,2.97,3.39],[-5.97,2.83,3.39],[-6.94,2.51,3.39],[-7.77,2.36,3.34],[-8.22,2.23,3.35],[-8.39,1.97,3.37],[-8.16,2.09,3.37],[-8.02,2.32,3.35],[-7.54,2.49,3.36],[-7.21,2.58,3.37],[-7.21,2.65,3.36],[-6.99,2.73,3.33],[-6.12,2.64,3.32],[-5.44,2.47,3.32],[-5.40,1.80,3.31],[-5.48,1.00,3.29],[-5.96,0.35,3.30],[-6.76,0.15,3.34],[-7.37,0.13,3.35],[-7.65,0.47,3.33],[-7.48,0.80,3.33],[-6.96,0.64,3.31],[-6.41,0.35,3.31],[-6.33,-0.31,3.32],[-6.40,-1.17,3.32],[-6.23,-1.86,3.48],[-5.92,-1.99,3.58],[-5.75,-1.97,3.58],[-5.77,-1.92,3.58],[-5.78,-1.91,3.58],[-5.78,-1.92,3.57],[-5.12,-1.93,3.56],[-4.06,-1.96,3.51],[-2.89,-1.96,3.54],[-2.05,-1.96,3.54],[-1.09,-2.03,3.46],[-0.02,-2.30,3.42],[0.44,-2.79,3.44],[0.70,-2.61,3.43],[0.27,-2.62,3.44],[-0.25,-2.23,3.42],[-0.50,-2.13,3.42],[-0.26,-2.46,3.43],[-0.29,-3.06,3.38],[-0.64,-3.61,3.41],[-0.71,-3.79,3.54],[-0.75,-4.19,3.51],[-0.27,-4.65,3.56],[0.49,-5.08,3.56],[0.85,-4.92,3.57],[0.39,-4.51,3.56],[-0.35,-4.54,3.55],[-1.02,-4.58,3.54],[-1.58,-4.56,3.56],[-1.85,-4.87,3.50],[-1.81,-4.87,3.39],[-1.44,-4.72,3.40],[-0.94,-4.66,3.45],[-0.30,-4.55,3.49],[0.24,-4.76,3.53],[0.73,-4.75,3.53],[0.67,-4.35,3.53],[-0.09,-4.45,3.48],[-0.52,-4.54,3.35],[-0.71,-4.76,3.33],[-0.71,-5.19,3.06],[-0.80,-5.35,2.82],[-0.81,-5.28,2.83],[-0.90,-4.94,3.13],[-0.75,-4.41,3.40],[-0.67,-3.62,3.42],[-0.66,-2.85,3.41],[-0.24,-2.24,3.38],[-0.17,-1.96,3.45],[-0.60,-1.78,3.45],[-0.83,-1.93,3.46],[-1.51,-1.90,3.49],[-2.29,-1.96,3.58],[-2.56,-1.85,3.62],[-3.07,-1.88,3.60],[-3.93,-1.91,3.59],[-4.98,-2.00,3.35],[-5.95,-1.97,3.34],[-6.95,-2.06,3.32],[-7.89,-2.14,3.26],[-8.47,-2.13,3.27],[-8.35,-2.02,3.30],[-7.92,-2.02,3.35],[-7.42,-1.97,3.38],[-6.67,-2.05,3.39],[-6.33,-1.64,3.38],[-6.33,-0.83,3.29],[-6.66,-0.30,3.29],[-7.16,-0.05,3.31],[-7.66,0.20,3.31],[-7.81,0.48,3.32],[-7.51,0.62,3.34],[-6.90,0.53,3.32],[-6.11,0.53,3.28],[-5.54,0.30,3.38],[-5.10,0.20,3.40],[-4.84,0.47,3.35],[-4.99,0.88,3.30],[-5.39,0.97,2.92],[-5.46,1.26,3.09],[-5.50,1.77,3.26],[-5.62,2.21,3.27],[-6.18,2.53,3.25],[-6.99,2.69,3.24],[-7.68,2.84,3.21],[-8.02,2.69,3.20],[-7.98,2.67,3.12],[-7.81,2.65,3.01],[-7.97,2.65,3.16],[-8.22,2.57,3.12],[-8.08,2.49,3.02],[-8.17,2.73,3.09],[-8.07,2.93,3.17],[-7.59,2.84,3.24],[-6.89,2.78,3.25],[-6.11,2.76,3.30],[-5.14,2.65,3.24],[-5.34,2.99,3.32],[-4.67,3.17,3.31],[-4.22,3.17,3.21],[-4.00,3.31,3.26],[-3.25,3.44,3.32],[-2.29,3.23,3.36],[-1.63,2.82,3.36],[-1.24,2.08,3.33],[-0.58,1.56,3.32],[-0.15,0.79,3.30],[-0.61,-0.04,3.31],[-0.75,-0.57,3.26],[-0.72,-0.26,3.36],[-0.69,-1.15,3.35],[-0.51,-2.03,3.41],[-0.31,-2.73,3.45],[-0.60,-3.80,3.42],[0.02,-4.43,3.47],[0.54,-5.07,3.51],[0.48,-5.56,3.54],[0.48,-6.55,3.52],[0.37,-7.28,3.55],[0.27,-7.90,3.54],[0.06,-8.34,3.56],[-0.52,-8.25,3.58],[-0.35,-8.05,3.57],[-0.06,-8.09,3.57],[0.23,-8.58,3.58],[0.46,-9.22,3.50],[0.60,-9.86,3.31],[0.63,-10.29,3.02],[0.72,-10.36,2.78],[1.21,-10.30,2.33],[1.39,-10.13,2.16],[1.22,-10.39,2.16],[1.35,-10.15,2.09],[1.53,-10.02,1.99],[1.53,-9.45,1.57],[1.22,-8.75,1.26],[1.02,-8.39,1.28],[1.31,-8.65,1.26],[1.42,-8.79,1.25],[1.48,-9.31,1.43],[1.48,-9.31,1.55],[1.41,-8.87,1.34],[0.75,-8.92,1.34],[-0.03,-9.21,1.28],[-1.01,-9.18,1.29],[-1.52,-9.15,1.32],[-1.69,-9.67,1.36],[-1.56,-9.40,1.35],[-1.42,-9.31,1.34],[-1.35,-9.15,1.31],[-1.17,-8.81,1.27],[-1.24,-8.03,1.27],[-1.58,-7.44,1.20],[-1.91,-7.31,0.94],[-1.93,-7.30,0.93],[-1.94,-7.30,0.93],[-1.94,-7.30,0.93]];              // the route the scanner was carried, decimated
   var held = {};                    // pad buttons currently down
-  var glide = null;                 // { x, y } destination in the scan frame
+  var glide = null;                 // { x, y } current waypoint in the scan frame
+  var path = null, pathAt = 0;      // the routed walk, and which leg of it we are on
   var tourDist = 0, tourLen = 0, tourAcc = [];
 
   function shortestTurn(from, to) {
@@ -843,7 +1129,7 @@
   }
 
   function stopAssist() {
-    glide = null;
+    glide = null; path = null; pathAt = 0;
   }
 
   // --- tap a spot ---------------------------------------------------------
@@ -859,14 +1145,56 @@
     var far = cam.camera.screenToWorld(sx, sy, 40);
     var dir = far.clone().sub(near);
     if (dir.y > -0.02) { return; }                       // at or above the horizon
-    var t = (floorAt(state.z).z - near.y) / dir.y;
+    var t = (state.g - near.y) / dir.y;
     if (t <= 0) { return; }
     var hit = near.add(dir.mulScalar(t));
     var tx = hit.x, ty = -hit.z;
     var dx = tx - state.x, dy = ty - state.y, d = Math.hypot(dx, dy);
     if (d < 0.25) { return; }
-    if (d > 14) { tx = state.x + dx / d * 14; ty = state.y + dy / d * 14; }
-    glide = { x: tx, y: ty };
+    if (d > 20) { tx = state.x + dx / d * 20; ty = state.y + dy / d * 20; }
+    walkTo(tx, ty, undefined);
+  }
+
+  // Route there if the grid can, and walk the route. Straight-line walking was
+  // the old behaviour and it stopped at the first wall between here and the
+  // click, which looks like the page ignoring you.
+  function walkTo(tx, ty, tz) {
+    var p = NAV ? snapWalkable(tx, ty, tz) : null;
+    if (p) {
+      var r = route(p.x, p.y, p.z);
+      if (r && r.length > 1) { path = r; pathAt = 1; glide = path[1]; return true; }
+      if (r) { glide = null; return true; }              // already standing there
+    }
+    path = null; pathAt = 0;
+    glide = { x: tx, y: ty };                            // no grid: aim straight at it
+    return !!p;
+  }
+
+  // A click lands on a wall, a worktop or 10 cm outside a doorway as often as it
+  // lands on open floor, so take the nearest standable cell within a metre or so.
+  function snapWalkable(tx, ty, tz) {
+    var ci = cellOf(tx, ty);
+    if (ci >= 0 && NAV.off[ci + 1] > NAV.off[ci]) {
+      var li = levelIndex(ci, tz === undefined ? state.g : tz, 1e3);
+      if (li >= 0) { return { x: tx, y: ty, z: NAV.zf[NAV.off[ci] + li] }; }
+    }
+    var best = null, bd = 1.3, rings = Math.ceil(bd / NAV.cell);
+    var cx = Math.floor((tx - NAV.x0) / NAV.cell), cy = Math.floor((ty - NAV.y0) / NAV.cell);
+    for (var dy2 = -rings; dy2 <= rings; dy2++) {
+      for (var dx2 = -rings; dx2 <= rings; dx2++) {
+        var ax = cx + dx2, ay = cy + dy2;
+        if (ax < 0 || ay < 0 || ax >= NAV.nx || ay >= NAV.ny) { continue; }
+        var c = ay * NAV.nx + ax;
+        if (NAV.off[c + 1] === NAV.off[c]) { continue; }
+        var px = NAV.x0 + (ax + 0.5) * NAV.cell, py = NAV.y0 + (ay + 0.5) * NAV.cell;
+        var d2 = Math.hypot(px - tx, py - ty);
+        if (d2 < bd) {
+          var l2 = levelIndex(c, tz === undefined ? state.g : tz, 1e3);
+          if (l2 >= 0) { bd = d2; best = { x: px, y: py, z: NAV.zf[NAV.off[c] + l2] }; }
+        }
+      }
+    }
+    return best;
   }
 
   var goBtn = document.getElementById("go-btn");
@@ -883,7 +1211,7 @@
     var key = b.dataset.nudge;
     function down(e) {
       if (e) { e.preventDefault(); }
-      if (key === "level") { state.pitch = 0; lastLook = performance.now(); return; }
+      if (key === "level") { state.pitch = 0; return; }
       held[key] = true;
       if (key === "fwd" || key === "back" || key === "left" || key === "right") { stopAssist(); }
     }
@@ -942,12 +1270,20 @@
     if (!glide) { return; }
     var dx = glide.x - state.x, dy = glide.y - state.y, d = Math.hypot(dx, dy);
     var step = 1.6 * state.speed * dt;
-    if (d <= Math.max(step, 0.08)) { state.x = glide.x; state.y = glide.y; glide = null; }
-    else { state.x += dx / d * step; state.y += dy / d * step; }
-    if (state.mode === "walk") { state.z = floorAt(state.z).z + EYE; }
-    if (performance.now() - lastLook > 900 && d > 0.3) {
-      state.yaw += shortestTurn(state.yaw, Math.atan2(-dx, dy) * pc.math.RAD_TO_DEG) * Math.min(1, dt * 2.5);
+    // Assisted walking goes through stepTo like everything else, so the route
+    // cannot clip a doorframe on a thinned straight, and height comes from the
+    // grid each frame -- which is what climbs the stairs, a tread at a time,
+    // instead of snapping to each waypoint's height.
+    if (d <= Math.max(step, 0.08)) {
+      stepTo(glide.x, glide.y);
+      if (path && pathAt + 1 < path.length) { pathAt += 1; glide = path[pathAt]; }
+      else { glide = null; path = null; pathAt = 0; }
+    } else if (!stepTo(state.x + dx / d * step, state.y + dy / d * step)) {
+      glide = null; path = null; pathAt = 0;     // walked into something: stop, don't grind
     }
+    // The head is never turned for the viewer. It used to swing towards the
+    // destination after 900 ms of not aiming, which reads as the picture moving
+    // on its own: you line up a frame, walk, and arrive looking somewhere else.
   }
 
   // ---- stills ----
@@ -994,6 +1330,264 @@
   var shot = document.querySelector("[data-photo]");
   shot.addEventListener("click", takePhoto);
 
+  // ---- camera height ----
+  // Eye height used to be a constant. For scouting it is the second question
+  // after the lens -- a doorway reads completely differently from 0.45 m -- and
+  // the page could not answer it.
+  var hSlider = document.getElementById("h-slider");
+  function setHeight(h) {
+    state.h = Math.max(0.2, Math.min(2.8, h));
+    hSlider.value = String(state.h);
+    document.querySelectorAll("[data-h]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(Math.abs(Number(b.dataset.h) - state.h) < 0.005));
+    });
+    if (state.mode === "walk") { state.z = state.g + state.h; }
+    markHash();
+  }
+  document.querySelectorAll("[data-h]").forEach(function (b) {
+    b.addEventListener("click", function () { setHeight(Number(b.dataset.h)); canvas.focus(); });
+  });
+  hSlider.addEventListener("input", function () { setHeight(Number(hSlider.value)); });
+
+  document.querySelectorAll("[data-walls]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      walls = b.dataset.walls === "1";
+      pressOnly("[data-walls]", "data-walls", b.dataset.walls);
+      canvas.focus();
+    });
+  });
+
+  // ---- shot links ----
+  // Everything needed to stand in this frame again goes in the address bar, so a
+  // frame can be sent to someone instead of described. A saved still proves what
+  // it looked like; a link hands over the camera.
+  function hashNow() {
+    return "#x=" + state.x.toFixed(2) + "&y=" + state.y.toFixed(2) +
+           "&z=" + state.z.toFixed(2) + "&a=" + Math.round(state.yaw) +
+           "&p=" + Math.round(state.pitch) + "&mm=" + currentMM +
+           "&h=" + state.h.toFixed(2) + (state.mode === "fly" ? "&fly=1" : "");
+  }
+  function linkFor(s) {
+    return location.origin + location.pathname +
+           "#x=" + s.x.toFixed(2) + "&y=" + s.y.toFixed(2) + "&z=" + s.z.toFixed(2) +
+           "&a=" + Math.round(s.yaw) + "&p=" + Math.round(s.pitch) +
+           "&mm=" + s.mm + "&h=" + s.h.toFixed(2);
+  }
+  // The link is read once, before anything can overwrite it, and writing back
+  // is held until it has been applied. The page writes the address bar as you
+  // move and loads the grid asynchronously: whichever happened first won, so a
+  // link opened on a slow connection could be overwritten by the opening shot
+  // and silently ignored.
+  var INITIAL_HASH = location.hash;
+  var hashReady = false;
+  var lastHashStr = "", lastHashAt = 0;
+  function markHash(force) {
+    if (!hashReady) { return; }
+    var now = performance.now();
+    if (!force && now - lastHashAt < 700) { return; }
+    var h = hashNow();
+    if (h === lastHashStr) { return; }
+    lastHashStr = h; lastHashAt = now;
+    try { history.replaceState(null, "", h); } catch (e) { /* file:// refuses */ }
+  }
+  function applyHash(h) {
+    var q = {}, parts = String(h || "").replace(/^#/, "").split("&"), i, kv;
+    for (i = 0; i < parts.length; i++) {
+      kv = parts[i].split("=");
+      if (kv.length === 2) { q[kv[0]] = parseFloat(kv[1]); }
+    }
+    if (!isFinite(q.x) || !isFinite(q.y)) { return false; }
+    stopAssist();
+    setMode(q.fly ? "fly" : "walk");
+    if (isFinite(q.h)) { setHeight(q.h); }
+    state.x = q.x; state.y = q.y;
+    if (isFinite(q.a)) { state.yaw = q.a; }
+    if (isFinite(q.p)) { state.pitch = q.p; }
+    if (isFinite(q.z)) {
+      // The author's exact frame wins. Settling onto the measured floor instead
+      // reopened the shot up to 10 cm off, which is a different frame on a long
+      // lens. The ground is taken from the link so the next step still walks
+      // from somewhere sensible.
+      state.z = q.z;
+      state.g = q.z - state.h;
+    } else {
+      settleFrom(state.z - state.h);
+    }
+    if (isFinite(q.mm)) { setLens(q.mm); }
+    return true;
+  }
+  function copyText(text, btn, label) {
+    function done(ok) {
+      var was = btn.textContent;
+      btn.textContent = ok ? "Copied" : "Press Ctrl+C";
+      setTimeout(function () { btn.textContent = label || was; }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      // Clipboard access can be refused outright; a selected textarea still lets
+      // the viewer copy it by hand rather than losing the link.
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;left:8px;bottom:8px;width:40ch;height:4em;z-index:9";
+      document.body.appendChild(ta); ta.select();
+      done(false);
+      setTimeout(function () { ta.remove(); }, 8000);
+    }
+  }
+
+  // ---- shot list ----
+  // Marked shots live in this browser only (localStorage), which is why Link,
+  // Sheet and List exist: the page cannot hand the list to anyone by itself.
+  var SHOT_KEY = "pn-shots:" + location.pathname;
+  var shots = [];
+  try { shots = JSON.parse(localStorage.getItem(SHOT_KEY) || "[]") || []; } catch (e) { shots = []; }
+  var shotsEl = document.getElementById("shots"), shotsEmpty = document.getElementById("shots-empty"),
+      shotCount = document.getElementById("shot-n");
+
+  function saveShots() {
+    try { localStorage.setItem(SHOT_KEY, JSON.stringify(shots)); return true; }
+    catch (e) { return false; }
+  }
+  function thumbURL(width) {
+    var w = width || 480, h = Math.max(1, Math.round(w * canvas.height / canvas.width));
+    var c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    c.getContext("2d").drawImage(canvas, 0, 0, w, h);
+    return c.toDataURL("image/jpeg", 0.62);
+  }
+  function nearestRoom() {
+    var best = "", bd = 7.0;
+    for (var i = 0; i < ROOMS.points.length; i++) {
+      var p = ROOMS.points[i];
+      if (Math.abs(p.z - state.z) > 1.8) { continue; }
+      var d = Math.hypot(p.x - state.x, p.y - state.y);
+      if (d < bd) { bd = d; best = p.name || ""; }
+    }
+    return best;
+  }
+  function addShot() {
+    var s = { x: state.x, y: state.y, z: state.z, yaw: state.yaw, pitch: state.pitch,
+              mm: currentMM, h: state.h, room: nearestRoom(),
+              hdg: Math.round(((-state.yaw % 360) + 360) % 360),
+              storey: floorAt(state.z).n, img: thumbURL(480) };
+    shots.push(s);
+    if (!saveShots()) {
+      // Out of browser storage: keep the shot, drop the oldest pictures rather
+      // than the shots themselves.
+      for (var i = 0; i < shots.length - 1 && !saveShots(); i++) { delete shots[i].img; }
+    }
+    renderShots();
+    document.querySelector('[data-chart="shots"]').click();
+  }
+  function applyShot(s) {
+    stopAssist();
+    setMode("fly");                   // restore the frame exactly, height included
+    state.x = s.x; state.y = s.y; state.z = s.z;
+    state.yaw = s.yaw; state.pitch = s.pitch;
+    setHeight(s.h); setLens(s.mm);
+    setMode("walk");
+    state.z = s.z;                    // walk mode would otherwise resettle it
+    canvas.focus(); markHash();
+  }
+  function renderShots() {
+    shotsEl.innerHTML = "";
+    shots.forEach(function (s, i) {
+      var wrap = document.createElement("div");
+      wrap.className = "shot";
+      var b = document.createElement("button");
+      b.className = "room"; b.type = "button";
+      b.innerHTML = (s.img ? '<img src="' + s.img + '" alt="">'
+                           : '<img alt="" style="visibility:hidden">') +
+                    '<span>' + (s.room || s.storey || "Shot") +
+                    '<i>' + s.mm + "mm</i></span>";
+      b.title = "Shot " + (i + 1) + " · " + s.mm + " mm · " + s.h.toFixed(2) +
+                " m · " + s.hdg + "°" + (s.room ? " · " + s.room : "");
+      b.addEventListener("click", function () { applyShot(s); });
+      var x = document.createElement("button");
+      x.className = "x"; x.type = "button"; x.textContent = "x";
+      x.setAttribute("aria-label", "Remove shot " + (i + 1));
+      x.addEventListener("click", function (e) {
+        e.stopPropagation();
+        shots.splice(i, 1); saveShots(); renderShots();
+      });
+      wrap.appendChild(b); wrap.appendChild(x);
+      shotsEl.appendChild(wrap);
+    });
+    shotCount.textContent = shots.length ? " " + shots.length : "";
+    shotsEmpty.hidden = shotsEl.hidden || shots.length > 0;
+  }
+
+  // A contact sheet is the thing that actually leaves the browser: thumbnail,
+  // number, lens, height and room, laid out to print.
+  function exportSheet() {
+    if (!shots.length) { addShot(); return; }
+    var cols = Math.min(3, shots.length), tw = 480, th = Math.round(tw * 9 / 16);
+    var cap = 54, pad = 18, head = 76;
+    var rows = Math.ceil(shots.length / cols);
+    var out = document.createElement("canvas");
+    out.width = pad + cols * (tw + pad);
+    out.height = head + rows * (th + cap + pad) + pad;
+    var g = out.getContext("2d");
+    g.fillStyle = "#0e0f12"; g.fillRect(0, 0, out.width, out.height);
+    g.fillStyle = "#eceef2";
+    g.font = "600 28px 'IBM Plex Sans Condensed', system-ui, sans-serif";
+    g.textBaseline = "alphabetic";
+    g.fillText(TITLE.toUpperCase() + " — SHOT LIST", pad, 40);
+    g.fillStyle = "#8b90a0";
+    g.font = "400 15px 'IBM Plex Mono', monospace";
+    g.fillText(shots.length + " shots · Super 35 · " + new Date().toISOString().slice(0, 10), pad, 62);
+
+    var pending = 0, done = false;
+    function finish() {
+      if (!done && pending === 0) {
+        done = true;
+        out.toBlob(function (blob) {
+          if (!blob) { return; }
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = slug(TITLE) + "_shotlist.png";
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        }, "image/png");
+      }
+    }
+    shots.forEach(function (s, i) {
+      var cx = pad + (i % cols) * (tw + pad), cy = head + Math.floor(i / cols) * (th + cap + pad);
+      g.fillStyle = "#05060a"; g.fillRect(cx, cy, tw, th);
+      g.fillStyle = "#eceef2";
+      g.font = "500 17px 'IBM Plex Sans Condensed', system-ui, sans-serif";
+      g.fillText(String(i + 1) + ".  " + (s.room || s.storey || "—"), cx, cy + th + 22);
+      g.fillStyle = "#8b90a0";
+      g.font = "400 13px 'IBM Plex Mono', monospace";
+      g.fillText(s.mm + " mm · h " + s.h.toFixed(2) + " m · " + s.hdg + "° · " +
+                 s.x.toFixed(1) + ", " + s.y.toFixed(1) + " m", cx, cy + th + 42);
+      if (s.img) {
+        pending++;
+        var im = new Image();
+        im.onload = function () { g.drawImage(im, cx, cy, tw, th); pending--; finish(); };
+        im.onerror = function () { pending--; finish(); };
+        im.src = s.img;
+      }
+    });
+    finish();
+  }
+
+  document.getElementById("shot-add").addEventListener("click", addShot);
+  document.getElementById("shot-link").addEventListener("click", function () {
+    copyText(location.origin + location.pathname + hashNow(), this, "Link");
+  });
+  document.getElementById("shot-sheet").addEventListener("click", exportSheet);
+  document.getElementById("shot-list").addEventListener("click", function () {
+    var lines = shots.map(function (s, i) {
+      return (i + 1) + ". " + (s.room || s.storey || "—") + " — " + s.mm + " mm, " +
+             s.h.toFixed(2) + " m, " + s.hdg + "°\n   " + linkFor(s);
+    });
+    copyText(TITLE + " — shot list\n\n" + (lines.join("\n") || "(none marked)"), this, "List");
+  });
+  renderShots();
+
   // ---- frame ----
   var roPos = document.getElementById("ro-pos"), roH = document.getElementById("ro-h"),
       roHdg = document.getElementById("ro-hdg"), roStorey = document.getElementById("ro-storey");
@@ -1007,11 +1601,9 @@
     if (f || r || u) { stopAssist(); move(f * speed, r * speed, u * speed); }
     if (held.turnL || held.turnR) {
       state.yaw += (held.turnL ? 1 : -1) * 70 * dt;
-      lastLook = performance.now();
     }
     if (held.lookU || held.lookD) {
       state.pitch = pc.math.clamp(state.pitch + (held.lookU ? 1 : -1) * 48 * dt, -89, 89);
-      lastLook = performance.now();
     }
     stepAssist(dt);
 
@@ -1024,23 +1616,67 @@
     hudTimer += dt;
     if (hudTimer > 0.1) {
       hudTimer = 0;
-      var storey = floorAt(state.z);
+      var storey = floorAt(state.g + EYE);
       var hdg = ((-state.yaw % 360) + 360) % 360;
       roPos.textContent = state.x.toFixed(1) + ", " + state.y.toFixed(1) + " m";
-      roH.textContent = (state.z - storey.z).toFixed(2) + " m";
+      roH.textContent = (state.mode === "fly" ? (state.z - storey.z) : state.h).toFixed(2) + " m";
       roHdg.textContent = String(Math.round(hdg)).padStart(3, "0") + "°";
       roStorey.textContent = storey.n;
+      markHash();
       if (!planEl.hasAttribute("hidden")) { drawPlan(); }
     }
   });
 
   VIEWS[Object.keys(VIEWS)[0]]();
+  settleFrom(state.z - state.h);
+
+  // The walkable surface, then the link. Both are optional and the page must
+  // stand up without either: a published site from before this change has no
+  // nav.json, and a fetch can simply fail.
+  var wallsSeg = document.getElementById("walls-seg");
+  wallsSeg.hidden = true;
+  fetch("nav.json", { cache: "force-cache" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.n || !d.z) { return; }
+      NAV = navIndex(d);
+      wallsSeg.hidden = false;
+      if (state.mode === "walk") { settleFrom(state.z - state.h); }
+    })
+    .catch(function () { /* no grid: straight-line walking, flat storeys */ })
+    .then(function () {
+      if (INITIAL_HASH) { applyHash(INITIAL_HASH); }
+      hashReady = true;
+    });
+
+  window.addEventListener("hashchange", function () {
+    if (location.hash !== lastHashStr) { applyHash(location.hash); }
+  });
+
   (function () {
     var f = floorAt(state.z), yaw = state.yaw * pc.math.DEG_TO_RAD;
     var p = FIGURE_AT || { x: state.x - Math.sin(yaw) * 2.5, y: state.y + Math.cos(yaw) * 2.5 };
     figure.setPosition(p.x, f.z, -p.y);
     figure.setEulerAngles(0, facingViewer(p.x, p.y), 0);
   })();
+  // A read-only handle for the verification harness (tools/verify_nav.mjs). The
+  // claims worth checking -- she can reach the upper floor, she cannot walk
+  // through a wall -- are about the page's own movement and grid, and a check
+  // that infers them from pixels is a check that passes when it should not.
+  // Nothing in the page reads this.
+  window.__scout = {
+    state: state,
+    route: route,
+    walkTo: walkTo,
+    groundNear: groundNear,
+    nav: function () { return NAV; },
+    shots: function () { return shots; },
+    stop: stopAssist,
+    settleFrom: settleFrom,
+    rooms: ROOMS,
+    floors: FLOORS
+  };
+
   app.start();
   canvas.focus();
 })();

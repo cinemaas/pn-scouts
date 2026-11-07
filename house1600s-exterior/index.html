@@ -117,6 +117,15 @@
   .room span i { color: var(--dim); font-style: normal; }
   .room[aria-pressed="true"] { border-color: var(--acc); background: var(--acc); color: var(--acc-ink); }
   .room[aria-pressed="true"] span i { color: var(--acc-ink); opacity: 0.75; }
+  .shot { position: relative; flex: 0 0 auto; }
+  .shot .x { position: absolute; top: 3px; right: 3px; padding: 2px 5px; border-radius: 3px;
+             background: rgba(5, 6, 10, 0.74); font: 500 11px/1 var(--mono); color: var(--fg); }
+  .shot .x:hover { background: #a93b29; }
+  .empty { margin: 0; max-width: 72ch; font: 400 var(--t-xs)/1.5 var(--sans); color: var(--dim); }
+  .empty[hidden] { display: none; }
+  .empty b { color: var(--fg); font-weight: 500; }
+  .stack { display: grid; gap: 2px; }
+  .seg button i { font: 400 9px/1 var(--mono); font-style: normal; opacity: 0.7; margin-left: 3px; }
   .plan { display: block; width: 100%; height: min(186px, 21vh); min-height: 96px; }
   .plan[hidden] { display: none; }
   .plan .wall { stroke: #6f7789; fill: none; vector-effect: non-scaling-stroke; stroke-width: 1; }
@@ -148,6 +157,7 @@
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line);
          border-radius: 4px; padding: 2px; }
   .seg.seg3 { grid-template-columns: repeat(3, 1fr); }
+  .seg.seg4 { grid-template-columns: repeat(4, 1fr); }
   .seg button { text-align: center; padding: 7px var(--s2); }
   .view-btn { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: var(--s3);
               background: rgba(236, 238, 242, 0.05); }
@@ -273,6 +283,16 @@
           <button data-figure="place">Place</button>
         </div>
       </div>
+      <div class="group">
+        <div class="group-label">Camera height</div>
+        <div class="seg seg3" role="group" aria-label="Camera height">
+          <button data-h="0.45" aria-pressed="false">Low</button>
+          <button data-h="1.6" aria-pressed="true">Eye</button>
+          <button data-h="2.1" aria-pressed="false">High</button>
+        </div>
+        <input id="h-slider" type="range" min="0.2" max="2.8" step="0.05" value="1.6"
+               aria-label="Camera height above the floor, metres">
+      </div>
     </aside>
 
     <div class="viewer">
@@ -294,15 +314,20 @@
       <div class="chart" id="chart">
         <div class="chart-head">
           <div class="group-label">Rooms</div>
-          <div class="seg seg3" role="group" aria-label="Room chart">
+          <div class="seg seg4" role="group" aria-label="Room chart">
             <button data-chart="rooms" aria-pressed="true">Pictures</button>
             <button data-chart="plan" aria-pressed="false">Plan</button>
+            <button data-chart="shots" aria-pressed="false">Shots<i id="shot-n"></i></button>
             <button data-chart="off" aria-pressed="false">Hide</button>
           </div>
         </div>
         <div class="chart-body" id="chart-body">
           <div class="rooms" id="rooms"></div>
           <svg class="plan" id="plan" hidden aria-label="Plan of the scan with the places marked"></svg>
+          <div class="rooms" id="shots" hidden></div>
+          <p class="empty" id="shots-empty" hidden>No shots marked yet. Frame something you like and press
+             <b>+ Mark this shot</b> (or <kbd>M</kbd>). Marked shots stay in this browser &mdash;
+             <b>Sheet</b> downloads them as a contact sheet, <b>Copy link</b> shares the frame you are in now.</p>
         </div>
       </div>
 
@@ -339,8 +364,23 @@
           <button data-mode="walk" aria-pressed="true">Walk</button>
           <button data-mode="fly" aria-pressed="false">Fly</button>
         </div>
+        <div class="seg" role="group" aria-label="Walls and stairs" id="walls-seg">
+          <button data-walls="1" aria-pressed="true">Walls on</button>
+          <button data-walls="0" aria-pressed="false">Off</button>
+        </div>
       </div>
 
+      <div class="group">
+        <div class="group-label">Shots</div>
+        <div class="stack">
+          <button class="wide" id="shot-add" type="button" title="Mark this frame (M)">+ Mark this shot</button>
+          <div class="seg seg3" role="group" aria-label="Share shots">
+            <button id="shot-link" type="button" title="Copy a link that opens this exact frame">Link</button>
+            <button id="shot-sheet" type="button" title="Download a contact sheet of the marked shots">Sheet</button>
+            <button id="shot-list" type="button" title="Copy the marked shots as a list of links">List</button>
+          </div>
+        </div>
+      </div>
       <div class="group">
         <div class="group-label">Speed</div>
         <div class="seg seg3" role="group" aria-label="Movement speed">
@@ -356,7 +396,7 @@
   <footer class="bar bar-bot">
     <div class="readout" aria-live="off">
       <span>Position</span><b id="ro-pos">0.0, 0.0 m</b>
-      <span>Eye height</span><b id="ro-h">1.60 m</b>
+      <span>Camera height</span><b id="ro-h">1.60 m</b>
       <span>Heading</span><b id="ro-hdg">048&deg;</b>
       <span>Storey</span><b id="ro-storey">Ground</b>
     </div>
@@ -394,9 +434,92 @@
   // NaN and floater filtering, SH bands dropped to fit. Served as unbundled SOG.
   var TILES = ["scan"];
   var SENSOR_W = 27.03;                       // Super 35 16:9, mm (RED Gemini 5K)
-  var EYE = 1.6;
+  var EYE = 1.6;                              // default stand height; state.h is the live one
   var FLOORS = [{ n: "Ground", z: 0.09 }];
   var CENTRE = { x: -0.20, y: 9.51 };
+
+  // ---- walkable surface ----
+  // nav.json (tools/nav_grid.py) is a grid of standable heights measured off the
+  // mesh: a list of levels per cell, so a staircase is a ramp of cells and a wall
+  // is a cell with nothing standable in it. Before it, walk mode pinned eye height
+  // to the nearest storey floor, which made stairs unclimbable -- z could not rise
+  // between storeys, so the upper floor of a scan was unreachable however long you
+  // walked at it. The page must work without the file too: an older published site
+  // has no nav.json, and a failed fetch must not take the walk-through with it.
+  var NAV = null, walls = true;
+
+  function navIndex(d) {
+    var off = new Int32Array(d.n.length + 1), i;
+    for (i = 0; i < d.n.length; i++) { off[i + 1] = off[i] + d.n[i]; }
+    d.off = off;
+    d.zf = new Float32Array(d.z.length);
+    for (i = 0; i < d.z.length; i++) { d.zf[i] = d.z[i] / 100; }
+    return d;
+  }
+  function cellOf(x, y) {
+    var cx = Math.floor((x - NAV.x0) / NAV.cell), cy = Math.floor((y - NAV.y0) / NAV.cell);
+    if (cx < 0 || cy < 0 || cx >= NAV.nx || cy >= NAV.ny) { return -1; }
+    return cy * NAV.nx + cx;
+  }
+  // The standable height in this cell nearest to `foot`, within `tol`, or null.
+  function groundNear(x, y, foot, tol) {
+    if (!NAV) { return null; }
+    var ci = cellOf(x, y);
+    if (ci < 0) { return null; }
+    var best = null, bd = tol === undefined ? NAV.step : tol;
+    for (var i = NAV.off[ci]; i < NAV.off[ci + 1]; i++) {
+      var d = Math.abs(NAV.zf[i] - foot);
+      if (d <= bd) { bd = d; best = NAV.zf[i]; }
+    }
+    return best;
+  }
+  // The floor the camera is standing on is remembered, not re-derived from the
+  // camera's own height. Deriving it meant raising the camera to 2.1 m could
+  // find a different level half a metre away and drop the viewer onto it --
+  // measured at Klaypool, where a change of height moved the camera 0.4 m the
+  // wrong way and changed storey.
+  function settleZ() {
+    var g = groundNear(state.x, state.y, state.g, NAV ? NAV.step : 0);
+    if (g === null) { g = floorAt(state.g + state.h).z; }
+    state.g = g;
+    state.z = g + state.h;
+  }
+  // How much floor surrounds a level: 0 for an isolated patch, 8 in the open.
+  function support(ci, z) {
+    var cx = ci % NAV.nx, cy = Math.floor(ci / NAV.nx), n = 0;
+    for (var k = 0; k < NB.length; k++) {
+      var ax = cx + NB[k][0], ay = cy + NB[k][1];
+      if (ax < 0 || ay < 0 || ax >= NAV.nx || ay >= NAV.ny) { continue; }
+      if (levelIndex(ay * NAV.nx + ax, z, NAV.step) >= 0) { n++; }
+    }
+    return n;
+  }
+
+  // The level to stand on at (x, y) after a jump: near the height asked for,
+  // but with floor around it. A scan carries phantom surfaces -- the underside
+  // of a terrace, a seeded pose height from where the device was carried low --
+  // sitting in the same cell as the real ground and connected to nothing. At
+  // the House 1600s exterior the terrace cell offers -1.40, -0.90 and -0.15,
+  // and taking the nearest to the asked-for height chose -0.90: the camera
+  // stood three quarters of a metre under the garden, able to walk nowhere.
+  function groundFor(x, y, z) {
+    if (!NAV) { return null; }
+    var ci = cellOf(x, y);
+    if (ci < 0) { return null; }
+    var best = null, bscore = -1e9;
+    for (var i = NAV.off[ci]; i < Math.min(NAV.off[ci + 1], NAV.off[ci] + 8); i++) {
+      var lz = NAV.zf[i], score = support(ci, lz) - 2 * Math.abs(lz - z);
+      if (score > bscore) { bscore = score; best = lz; }
+    }
+    return best;
+  }
+
+  // After a jump the old ground means nothing, so search the whole column.
+  function settleFrom(z) {
+    var g = groundFor(state.x, state.y, z);
+    state.g = (g === null ? floorAt(z + state.h).z : g);
+    state.z = state.g + state.h;
+  }
 
   var loadEl = document.getElementById("loading");
   var loadMsg = document.getElementById("load-msg");
@@ -489,8 +612,7 @@
   // ---- camera state, all in the scan frame ----
   var TITLE = document.querySelector("h1").textContent;
   var currentMM = 25;
-  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1 };
-  var lastLook = 0;                 // when the viewer last aimed the head themselves
+  var state = { x: 0, y: 0, z: 0, yaw: 0, pitch: -6, mode: "walk", speed: 1, h: EYE, g: 0 };
 
   // Nearest floor at or below the camera. Scans have one to three storeys, so
   // this is a scan-by-scan list rather than Stevens' hard-coded ground/upper.
@@ -514,13 +636,14 @@
 
   document.querySelectorAll("[data-view]").forEach(function (b) {
     b.addEventListener("click", function () {
-      stopAssist(); VIEWS[b.dataset.view](); pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus();
+      stopAssist(); VIEWS[b.dataset.view](); settleFrom(state.z - state.h);
+      pressOnly("[data-view]", "data-view", b.dataset.view); canvas.focus();
     });
   });
   document.querySelectorAll("[data-mode]").forEach(function (b) {
     b.addEventListener("click", function () {
       setMode(b.dataset.mode);
-      if (b.dataset.mode === "walk") { state.z = floorAt(state.z).z + EYE; }
+      if (b.dataset.mode === "walk") { settleFrom(state.z - state.h); }
       canvas.focus();
     });
   });
@@ -556,15 +679,16 @@
     });
   });
 
+  function setLens(mm) {
+    var fov = fovFor(mm);
+    currentMM = mm;
+    cam.camera.fov = fov;
+    pressOnly("[data-mm]", "data-mm", String(mm));
+    document.getElementById("lens-mm").textContent = mm + " mm";
+    document.getElementById("lens-fov").textContent = fov.toFixed(1) + "°";
+  }
   document.querySelectorAll("[data-mm]").forEach(function (b) {
-    b.addEventListener("click", function () {
-      var mm = Number(b.dataset.mm), fov = fovFor(mm);
-      currentMM = mm;
-      cam.camera.fov = fov;
-      pressOnly("[data-mm]", "data-mm", b.dataset.mm);
-      document.getElementById("lens-mm").textContent = mm + " mm";
-      document.getElementById("lens-fov").textContent = fov.toFixed(1) + "°";
-    });
+    b.addEventListener("click", function () { setLens(Number(b.dataset.mm)); canvas.focus(); });
   });
 
   // ---- input ----
@@ -574,6 +698,7 @@
     keys[e.code] = true;
     if (/^(KeyW|KeyA|KeyS|KeyD|Arrow)/.test(e.code)) { stopAssist(); }
     if (e.code === "KeyP") { takePhoto(); }
+    if (e.code === "KeyM") { addShot(); }
     if (e.code === "KeyF") { showFigure(!figure.enabled); }
     if (e.code === "KeyG") { placeFigure(); showFigure(true); }
     if (/^(Arrow|Space)/.test(e.code) && document.activeElement === canvas) e.preventDefault();
@@ -599,7 +724,6 @@
       state.yaw -= (e.clientX - p.x) * 0.18;
       state.pitch = pc.math.clamp(state.pitch - (e.clientY - p.y) * 0.18, -89, 89);
       if (tap) { tap.moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); }
-      lastLook = performance.now();
     }
     p.x = e.clientX; p.y = e.clientY;
     if (pointers.size === 2) {
@@ -637,9 +761,158 @@
       state.y += fy * Math.cos(pitch) * fwd + ry * right;
       state.z += Math.sin(pitch) * fwd + up;
     } else {
-      state.x += fx * fwd + rx * right;
-      state.y += fy * fwd + ry * right;
+      stepTo(state.x + fx * fwd + rx * right, state.y + fy * fwd + ry * right);
     }
+  }
+
+  // Walk towards (tx, ty): stop at walls, follow stairs. Each axis is retried on
+  // its own when the diagonal is blocked, so brushing a wall slides along it
+  // instead of stopping dead -- without that, walking a corridor at a slight
+  // angle feels like being stuck on nothing.
+  function stepTo(tx, ty) {
+    if (!NAV || !walls) {
+      state.x = tx; state.y = ty;
+      if (state.mode === "walk") {
+        // Walls off: follow the floor where there is one, keep going where
+        // there is not, rather than snapping back to a storey height.
+        var free = groundNear(tx, ty, state.g, NAV ? NAV.step : 0);
+        if (free !== null) { state.g = free; }
+        state.z = state.g + state.h;
+      }
+      return true;
+    }
+    var f = state.g, g = groundNear(tx, ty, f);
+    if (g !== null) { state.x = tx; state.y = ty; state.g = g; state.z = g + state.h; return true; }
+    g = groundNear(tx, state.y, f);
+    if (g !== null) { state.x = tx; state.g = g; state.z = g + state.h; return true; }
+    g = groundNear(state.x, ty, f);
+    if (g !== null) { state.y = ty; state.g = g; state.z = g + state.h; return true; }
+    // Corner squeeze. Where two standable cells meet corner to corner -- which
+    // is what a doorway looks like at 0.3 m -- a step across the join lands in
+    // the empty cell between them, every test above fails, and the walk stalls
+    // in the doorway. So look one cell further along the same direction: if
+    // there is floor on the far side at this height, the gap is a join to cross
+    // rather than a void to stop at.
+    var dx = tx - state.x, dy = ty - state.y, dl = Math.hypot(dx, dy);
+    if (dl > 1e-6) {
+      var ax = tx + dx / dl * NAV.cell * 1.5, ay = ty + dy / dl * NAV.cell * 1.5;
+      if (groundNear(ax, ay, f) !== null) {
+        state.x = tx; state.y = ty; state.z = state.g + state.h; return true;
+      }
+    }
+    return false;
+  }
+
+  // ---- routing ----
+  // A* over the walkable cells, so "walk there" goes round the wall instead of
+  // into it, and up the stairs when the destination is on another floor. Nodes
+  // are (cell, level) pairs: one cell holds the floor, the ceiling below it and
+  // the stair tread passing over, and they are not interchangeable.
+  function nodeOf(ci, li) { return ci * 8 + li; }
+  function levelIndex(ci, z, tol) {
+    var best = -1, bd = tol, cap = Math.min(NAV.off[ci + 1], NAV.off[ci] + 8);
+    for (var i = NAV.off[ci]; i < cap; i++) {        // 8: what nodeOf() can encode
+      var d = Math.abs(NAV.zf[i] - z);
+      if (d <= bd) { bd = d; best = i - NAV.off[ci]; }
+    }
+    return best;
+  }
+  var NB = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+  function route(tx, ty, tz) {
+    if (!NAV) { return null; }
+    var sci = cellOf(state.x, state.y), tci = cellOf(tx, ty);
+    if (sci < 0 || tci < 0) { return null; }
+    var sli = levelIndex(sci, state.g, 1e3);
+    if (sli < 0) { return null; }
+    if (NAV.off[tci + 1] === NAV.off[tci]) { return null; }      // nothing standable there
+    var tli = tz === undefined ? -1 : levelIndex(tci, tz, 1.0);
+
+    var start = nodeOf(sci, sli), goals = {};
+    if (tli >= 0) { goals[nodeOf(tci, tli)] = 1; }
+    else { for (var i = NAV.off[tci]; i < NAV.off[tci + 1]; i++) { goals[nodeOf(tci, i - NAV.off[tci])] = 1; } }
+
+    var cell = NAV.cell, cameFrom = new Map(), cost = new Map(), heap = [];
+    function hx(ci) {
+      var dx = (ci % NAV.nx) - (tci % NAV.nx), dy = Math.floor(ci / NAV.nx) - Math.floor(tci / NAV.nx);
+      return Math.hypot(dx, dy) * cell;
+    }
+    function push(n, f) {
+      heap.push([f, n]);
+      var i = heap.length - 1;
+      while (i > 0) {
+        var p = (i - 1) >> 1;
+        if (heap[p][0] <= heap[i][0]) { break; }
+        var t = heap[p]; heap[p] = heap[i]; heap[i] = t; i = p;
+      }
+    }
+    function pop() {
+      var top = heap[0], last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        var i = 0;
+        for (;;) {
+          var l = 2 * i + 1, r = l + 1, m = i;
+          if (l < heap.length && heap[l][0] < heap[m][0]) { m = l; }
+          if (r < heap.length && heap[r][0] < heap[m][0]) { m = r; }
+          if (m === i) { break; }
+          var t = heap[m]; heap[m] = heap[i]; heap[i] = t; i = m;
+        }
+      }
+      return top;
+    }
+
+    cost.set(start, 0); push(start, hx(sci));
+    var found = -1, guard = 0;
+    while (heap.length && guard++ < 120000) {
+      var cur = pop()[1];
+      if (goals[cur]) { found = cur; break; }
+      var ci = Math.floor(cur / 8), li = cur % 8;
+      var z = NAV.zf[NAV.off[ci] + li], g = cost.get(cur);
+      var cx = ci % NAV.nx, cy = Math.floor(ci / NAV.nx);
+      for (var k = 0; k < NB.length; k++) {
+        var nx2 = cx + NB[k][0], ny2 = cy + NB[k][1];
+        if (nx2 < 0 || ny2 < 0 || nx2 >= NAV.nx || ny2 >= NAV.ny) { continue; }
+        var nci = ny2 * NAV.nx + nx2, cnt = NAV.off[nci + 1] - NAV.off[nci];
+        for (var j = 0; j < cnt && j < 8; j++) {
+          var nz = NAV.zf[NAV.off[nci] + j];
+          if (Math.abs(nz - z) > NAV.step) { continue; }
+          // Diagonals are allowed to touch at a corner. Requiring both
+          // orthogonal neighbours -- or even either one -- sounds safer and is
+          // not: measured at Klaypool, it cut the reachable grid from 2,864
+          // cells to 2,270 and left nine of the twelve rooms unreachable,
+          // because at 0.3 m a doorway's standable cells meet corner to corner.
+          var n = nodeOf(nci, j);
+          var step = Math.hypot(NB[k][0], NB[k][1]) * cell + Math.abs(nz - z) * 1.5;
+          var ng = g + step;
+          if (!cost.has(n) || ng < cost.get(n)) {
+            cost.set(n, ng); cameFrom.set(n, cur); push(n, ng + hx(nci));
+          }
+        }
+      }
+    }
+    if (found < 0) { return null; }
+
+    var out = [], n2 = found;
+    while (n2 !== undefined) {
+      var c2 = Math.floor(n2 / 8), l2 = n2 % 8;
+      out.push({ x: NAV.x0 + (c2 % NAV.nx + 0.5) * cell,
+                 y: NAV.y0 + (Math.floor(c2 / NAV.nx) + 0.5) * cell,
+                 z: NAV.zf[NAV.off[c2] + l2] });
+      if (n2 === start) { break; }
+      n2 = cameFrom.get(n2);
+    }
+    out.reverse();
+    // Drop waypoints that sit on a straight run: a cell-by-cell path makes the
+    // camera wobble at 0.3 m intervals.
+    var thin = [out[0]];
+    for (var m2 = 1; m2 < out.length - 1; m2++) {
+      var a = thin[thin.length - 1], b = out[m2], c3 = out[m2 + 1];
+      var cross = (b.x - a.x) * (c3.y - a.y) - (b.y - a.y) * (c3.x - a.x);
+      if (Math.abs(cross) > 0.02 || Math.abs(c3.z - a.z) > 0.12) { thin.push(b); }
+    }
+    if (out.length > 1) { thin.push(out[out.length - 1]); }
+    return thin;
   }
 
 
@@ -733,7 +1006,10 @@
   function jumpTo(p) {
     stopAssist();
     setMode("walk");
-    state.x = p.x; state.y = p.y; state.z = p.z;
+    state.x = p.x; state.y = p.y;
+    // The room point's own height is where the operator's camera was; what the
+    // viewer wants is to stand on that floor at their chosen height.
+    settleFrom(p.z - EYE);
     state.yaw = p.yaw; state.pitch = -4;
     currentRoom = p.id;
     document.querySelectorAll("[data-room]").forEach(function (b) {
@@ -818,6 +1094,11 @@
       pressOnly("[data-chart]", "data-chart", mode);
       chartBody.hidden = mode === "off";
       roomsEl.hidden = mode !== "rooms";
+      shotsEl.hidden = mode !== "shots";
+      shotsEmpty.hidden = mode !== "shots" || shots.length > 0;
+      // hidden is an HTMLElement property, and this is an <svg>: assigning it
+      // sets a dead expando and leaves the attribute -- and the element then
+      // reports hidden === false while CSS keeps it display:none.
       if (mode === "plan") { planEl.removeAttribute("hidden"); }
       else { planEl.setAttribute("hidden", ""); }
       if (mode === "plan") { planStorey = null; drawPlan(); }
@@ -832,7 +1113,8 @@
   // transport under the frame.
   var TOUR = [[0.00,0.00,0.00],[-0.00,0.00,-0.00],[0.10,0.15,0.83],[1.04,-0.60,1.22],[2.76,-2.33,1.15],[4.23,-4.07,1.22],[6.22,-4.50,1.13],[7.49,-4.71,1.10],[8.56,-4.42,1.07],[9.25,-3.84,1.08],[9.59,-2.80,1.18],[10.60,-1.97,1.22],[11.58,-1.02,1.22],[12.34,0.25,1.20],[12.74,1.75,1.21],[12.56,3.47,1.24],[12.48,5.33,1.28],[13.19,6.87,1.33],[12.99,7.55,1.40],[12.89,8.98,1.47],[12.92,10.73,1.69],[12.94,11.67,1.42],[13.06,12.97,1.52],[13.33,14.13,1.47],[13.52,15.29,1.51],[13.61,16.31,1.52],[13.81,16.85,1.59],[13.04,17.13,1.89],[12.89,17.20,1.68],[13.13,17.41,1.66],[13.67,18.10,1.56],[13.59,18.61,1.58],[13.69,19.87,1.53],[13.26,20.81,1.95],[13.09,21.16,2.24],[11.61,21.67,2.16],[10.55,22.36,2.11],[9.34,23.01,2.08],[8.01,23.47,2.03],[6.98,23.89,2.04],[5.90,24.62,2.04],[4.77,25.04,2.02],[4.14,25.31,1.65],[4.21,25.56,1.64],[4.29,25.43,1.63],[3.48,25.25,1.62],[2.38,25.04,1.66],[1.53,24.60,1.68],[0.64,23.88,1.67],[-0.29,23.10,1.65],[-1.09,22.03,1.67],[-2.02,20.95,1.70],[-2.84,20.13,1.72],[-3.15,19.25,1.73],[-2.75,18.69,1.73],[-1.91,18.92,1.72],[-1.22,19.79,1.70],[-0.82,21.22,1.70],[-0.63,22.73,1.69],[0.18,23.49,1.73],[0.87,23.96,1.69],[1.58,24.17,2.06],[1.05,23.74,1.67],[0.10,22.61,1.66],[-0.90,21.99,1.74],[-1.73,20.87,1.79],[-2.83,20.08,1.80],[-3.12,19.26,1.72],[-3.75,17.90,1.74],[-3.57,16.65,1.78],[-2.91,15.43,1.76],[-2.46,14.39,1.84],[-2.11,13.55,1.73],[-1.25,13.03,1.76],[-0.93,12.37,1.74],[-0.88,12.26,1.74],[-0.54,12.56,1.76],[-0.47,12.88,2.34],[-0.29,12.95,2.37],[0.54,12.83,2.31],[1.30,12.44,1.74],[1.67,11.72,1.48],[0.94,10.84,1.50],[0.04,9.83,1.55],[-1.10,8.86,1.60],[-2.36,8.51,1.53],[-3.15,7.92,1.52],[-3.14,7.37,1.49],[-2.41,7.54,1.49],[-2.31,8.78,1.60],[-1.44,8.51,1.54],[-0.52,8.01,1.50],[0.16,7.29,1.45],[0.47,5.97,1.40],[1.21,4.85,1.31],[1.44,3.83,1.31],[1.08,3.01,1.35],[0.72,2.01,1.38],[0.34,1.73,2.02],[-0.07,1.60,2.08],[-0.91,1.32,2.12],[-1.55,0.69,2.08],[-1.32,0.04,1.76],[-0.34,-0.39,1.41],[0.81,-0.47,1.35],[1.62,-1.60,1.25],[2.63,-2.66,1.26],[3.51,-3.15,1.30],[4.27,-4.03,1.70],[4.45,-4.79,1.63],[4.91,-6.18,1.41],[4.72,-7.27,1.20],[4.65,-8.70,1.12],[4.33,-10.14,1.05],[4.19,-11.30,1.10],[3.54,-12.21,1.12],[3.02,-13.30,1.03],[2.86,-13.70,1.65],[2.42,-14.28,1.29],[1.95,-15.11,0.87],[0.99,-16.54,0.75],[-0.38,-17.50,0.72],[-1.96,-18.05,0.74],[-3.73,-18.20,0.87],[-5.21,-17.74,0.98],[-6.71,-16.95,1.06],[-8.16,-16.02,1.17],[-9.59,-15.09,1.17],[-11.22,-14.43,1.14],[-12.80,-13.29,1.15],[-14.13,-12.30,1.15],[-14.71,-10.88,1.22],[-14.02,-9.67,1.28],[-12.77,-9.23,1.39],[-11.44,-9.51,1.30],[-10.15,-10.17,1.28],[-9.42,-10.69,1.33],[-8.80,-10.65,1.35],[-8.65,-10.06,1.34],[-9.62,-9.51,1.35],[-10.85,-9.30,1.33],[-12.29,-9.27,1.28],[-13.67,-8.76,1.25],[-14.67,-7.53,1.30],[-14.91,-6.97,1.70],[-14.94,-6.90,2.08],[-15.61,-7.06,1.59],[-16.18,-6.41,1.41],[-16.21,-5.03,1.45],[-15.78,-3.72,1.46],[-15.10,-2.59,1.52],[-14.05,-2.14,1.52],[-13.18,-2.29,1.58],[-12.46,-2.19,1.60],[-12.45,-1.84,1.63],[-12.32,-1.04,1.62],[-12.22,0.17,1.62],[-11.87,1.29,1.63],[-11.35,2.42,1.55],[-10.71,3.41,1.53],[-10.08,4.49,1.55],[-9.51,5.61,1.54],[-8.93,6.56,1.56],[-8.32,6.41,1.57],[-8.57,5.49,1.59],[-9.07,4.74,1.58],[-9.96,3.86,1.57],[-10.88,2.79,1.58],[-11.82,1.85,1.61],[-11.41,2.27,1.59],[-10.67,3.15,1.45],[-9.72,4.88,1.53],[-9.54,6.66,1.53],[-9.52,8.09,1.68],[-10.90,8.98,1.69],[-11.22,9.80,1.71],[-10.49,10.42,1.73],[-8.93,11.32,1.73],[-7.55,12.64,1.73],[-6.78,13.81,1.77],[-6.45,15.00,1.79],[-5.95,16.10,1.76],[-5.49,16.61,1.77],[-5.15,17.38,1.79],[-5.87,18.67,1.73],[-6.94,19.18,1.66],[-8.16,18.31,1.64],[-9.40,17.54,1.70],[-11.02,17.46,1.71],[-12.51,18.02,1.75],[-13.78,19.27,1.78],[-14.63,21.10,1.78],[-15.96,22.62,1.75],[-16.34,23.87,1.82],[-16.83,24.93,1.85],[-17.17,26.08,1.84],[-17.33,27.17,1.83],[-16.90,28.08,1.84],[-16.51,29.10,1.91],[-16.03,30.49,1.93],[-15.38,31.86,1.95],[-14.36,32.82,2.01],[-14.24,34.22,2.11],[-14.14,35.84,2.28],[-14.92,37.51,2.33],[-15.86,38.45,2.33],[-16.90,38.83,2.34],[-17.83,38.57,2.33],[-18.96,38.05,2.19],[-19.63,37.62,2.35],[-20.01,36.86,2.20],[-20.35,35.75,2.13],[-20.26,34.75,2.16],[-19.86,33.75,2.06],[-19.64,32.87,2.02],[-19.18,31.59,2.05],[-18.23,30.80,2.02],[-17.29,29.66,2.04],[-16.77,28.70,2.00],[-16.99,27.56,1.93],[-16.97,26.74,1.94],[-16.63,25.92,1.94],[-15.73,25.35,1.87],[-16.13,24.05,1.84],[-15.82,22.61,1.77],[-14.73,22.46,1.72],[-14.28,22.07,1.75],[-13.31,22.01,1.70],[-12.44,22.50,1.67],[-12.09,22.72,1.67],[-11.42,23.15,1.63],[-10.21,23.57,1.60],[-9.64,24.13,1.60],[-9.57,24.28,1.62],[-8.74,24.75,1.62],[-8.09,24.89,1.68],[-7.94,24.13,1.72],[-8.28,23.12,1.72],[-8.28,22.97,1.69],[-8.34,22.67,1.70],[-8.19,21.63,1.69],[-7.34,20.79,1.79],[-7.45,20.22,1.89],[-6.82,19.42,1.90],[-6.56,18.45,1.84],[-6.21,17.68,1.80],[-5.75,16.95,1.87],[-5.42,16.07,1.77],[-4.82,15.27,1.73],[-4.27,14.50,1.78],[-3.79,13.71,1.77],[-3.24,12.71,1.76],[-2.62,11.74,1.74],[-2.24,10.76,1.72],[-1.78,10.08,1.69],[-1.34,9.19,1.64],[-0.86,8.34,1.59],[-0.13,7.61,1.50],[0.42,7.27,1.46],[0.63,7.07,1.30],[1.08,6.00,1.22],[1.45,4.74,1.23],[1.61,3.88,1.24],[1.32,2.88,1.25],[1.61,1.89,1.15],[2.10,1.21,0.40],[2.20,1.09,-0.01],[2.21,1.07,-0.01]];              // the route the scanner was carried, decimated
   var held = {};                    // pad buttons currently down
-  var glide = null;                 // { x, y } destination in the scan frame
+  var glide = null;                 // { x, y } current waypoint in the scan frame
+  var path = null, pathAt = 0;      // the routed walk, and which leg of it we are on
   var tourDist = 0, tourLen = 0, tourAcc = [];
 
   function shortestTurn(from, to) {
@@ -843,7 +1125,7 @@
   }
 
   function stopAssist() {
-    glide = null;
+    glide = null; path = null; pathAt = 0;
   }
 
   // --- tap a spot ---------------------------------------------------------
@@ -859,14 +1141,56 @@
     var far = cam.camera.screenToWorld(sx, sy, 40);
     var dir = far.clone().sub(near);
     if (dir.y > -0.02) { return; }                       // at or above the horizon
-    var t = (floorAt(state.z).z - near.y) / dir.y;
+    var t = (state.g - near.y) / dir.y;
     if (t <= 0) { return; }
     var hit = near.add(dir.mulScalar(t));
     var tx = hit.x, ty = -hit.z;
     var dx = tx - state.x, dy = ty - state.y, d = Math.hypot(dx, dy);
     if (d < 0.25) { return; }
-    if (d > 14) { tx = state.x + dx / d * 14; ty = state.y + dy / d * 14; }
-    glide = { x: tx, y: ty };
+    if (d > 20) { tx = state.x + dx / d * 20; ty = state.y + dy / d * 20; }
+    walkTo(tx, ty, undefined);
+  }
+
+  // Route there if the grid can, and walk the route. Straight-line walking was
+  // the old behaviour and it stopped at the first wall between here and the
+  // click, which looks like the page ignoring you.
+  function walkTo(tx, ty, tz) {
+    var p = NAV ? snapWalkable(tx, ty, tz) : null;
+    if (p) {
+      var r = route(p.x, p.y, p.z);
+      if (r && r.length > 1) { path = r; pathAt = 1; glide = path[1]; return true; }
+      if (r) { glide = null; return true; }              // already standing there
+    }
+    path = null; pathAt = 0;
+    glide = { x: tx, y: ty };                            // no grid: aim straight at it
+    return !!p;
+  }
+
+  // A click lands on a wall, a worktop or 10 cm outside a doorway as often as it
+  // lands on open floor, so take the nearest standable cell within a metre or so.
+  function snapWalkable(tx, ty, tz) {
+    var ci = cellOf(tx, ty);
+    if (ci >= 0 && NAV.off[ci + 1] > NAV.off[ci]) {
+      var li = levelIndex(ci, tz === undefined ? state.g : tz, 1e3);
+      if (li >= 0) { return { x: tx, y: ty, z: NAV.zf[NAV.off[ci] + li] }; }
+    }
+    var best = null, bd = 1.3, rings = Math.ceil(bd / NAV.cell);
+    var cx = Math.floor((tx - NAV.x0) / NAV.cell), cy = Math.floor((ty - NAV.y0) / NAV.cell);
+    for (var dy2 = -rings; dy2 <= rings; dy2++) {
+      for (var dx2 = -rings; dx2 <= rings; dx2++) {
+        var ax = cx + dx2, ay = cy + dy2;
+        if (ax < 0 || ay < 0 || ax >= NAV.nx || ay >= NAV.ny) { continue; }
+        var c = ay * NAV.nx + ax;
+        if (NAV.off[c + 1] === NAV.off[c]) { continue; }
+        var px = NAV.x0 + (ax + 0.5) * NAV.cell, py = NAV.y0 + (ay + 0.5) * NAV.cell;
+        var d2 = Math.hypot(px - tx, py - ty);
+        if (d2 < bd) {
+          var l2 = levelIndex(c, tz === undefined ? state.g : tz, 1e3);
+          if (l2 >= 0) { bd = d2; best = { x: px, y: py, z: NAV.zf[NAV.off[c] + l2] }; }
+        }
+      }
+    }
+    return best;
   }
 
   var goBtn = document.getElementById("go-btn");
@@ -883,7 +1207,7 @@
     var key = b.dataset.nudge;
     function down(e) {
       if (e) { e.preventDefault(); }
-      if (key === "level") { state.pitch = 0; lastLook = performance.now(); return; }
+      if (key === "level") { state.pitch = 0; return; }
       held[key] = true;
       if (key === "fwd" || key === "back" || key === "left" || key === "right") { stopAssist(); }
     }
@@ -942,12 +1266,20 @@
     if (!glide) { return; }
     var dx = glide.x - state.x, dy = glide.y - state.y, d = Math.hypot(dx, dy);
     var step = 1.6 * state.speed * dt;
-    if (d <= Math.max(step, 0.08)) { state.x = glide.x; state.y = glide.y; glide = null; }
-    else { state.x += dx / d * step; state.y += dy / d * step; }
-    if (state.mode === "walk") { state.z = floorAt(state.z).z + EYE; }
-    if (performance.now() - lastLook > 900 && d > 0.3) {
-      state.yaw += shortestTurn(state.yaw, Math.atan2(-dx, dy) * pc.math.RAD_TO_DEG) * Math.min(1, dt * 2.5);
+    // Assisted walking goes through stepTo like everything else, so the route
+    // cannot clip a doorframe on a thinned straight, and height comes from the
+    // grid each frame -- which is what climbs the stairs, a tread at a time,
+    // instead of snapping to each waypoint's height.
+    if (d <= Math.max(step, 0.08)) {
+      stepTo(glide.x, glide.y);
+      if (path && pathAt + 1 < path.length) { pathAt += 1; glide = path[pathAt]; }
+      else { glide = null; path = null; pathAt = 0; }
+    } else if (!stepTo(state.x + dx / d * step, state.y + dy / d * step)) {
+      glide = null; path = null; pathAt = 0;     // walked into something: stop, don't grind
     }
+    // The head is never turned for the viewer. It used to swing towards the
+    // destination after 900 ms of not aiming, which reads as the picture moving
+    // on its own: you line up a frame, walk, and arrive looking somewhere else.
   }
 
   // ---- stills ----
@@ -994,6 +1326,264 @@
   var shot = document.querySelector("[data-photo]");
   shot.addEventListener("click", takePhoto);
 
+  // ---- camera height ----
+  // Eye height used to be a constant. For scouting it is the second question
+  // after the lens -- a doorway reads completely differently from 0.45 m -- and
+  // the page could not answer it.
+  var hSlider = document.getElementById("h-slider");
+  function setHeight(h) {
+    state.h = Math.max(0.2, Math.min(2.8, h));
+    hSlider.value = String(state.h);
+    document.querySelectorAll("[data-h]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(Math.abs(Number(b.dataset.h) - state.h) < 0.005));
+    });
+    if (state.mode === "walk") { state.z = state.g + state.h; }
+    markHash();
+  }
+  document.querySelectorAll("[data-h]").forEach(function (b) {
+    b.addEventListener("click", function () { setHeight(Number(b.dataset.h)); canvas.focus(); });
+  });
+  hSlider.addEventListener("input", function () { setHeight(Number(hSlider.value)); });
+
+  document.querySelectorAll("[data-walls]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      walls = b.dataset.walls === "1";
+      pressOnly("[data-walls]", "data-walls", b.dataset.walls);
+      canvas.focus();
+    });
+  });
+
+  // ---- shot links ----
+  // Everything needed to stand in this frame again goes in the address bar, so a
+  // frame can be sent to someone instead of described. A saved still proves what
+  // it looked like; a link hands over the camera.
+  function hashNow() {
+    return "#x=" + state.x.toFixed(2) + "&y=" + state.y.toFixed(2) +
+           "&z=" + state.z.toFixed(2) + "&a=" + Math.round(state.yaw) +
+           "&p=" + Math.round(state.pitch) + "&mm=" + currentMM +
+           "&h=" + state.h.toFixed(2) + (state.mode === "fly" ? "&fly=1" : "");
+  }
+  function linkFor(s) {
+    return location.origin + location.pathname +
+           "#x=" + s.x.toFixed(2) + "&y=" + s.y.toFixed(2) + "&z=" + s.z.toFixed(2) +
+           "&a=" + Math.round(s.yaw) + "&p=" + Math.round(s.pitch) +
+           "&mm=" + s.mm + "&h=" + s.h.toFixed(2);
+  }
+  // The link is read once, before anything can overwrite it, and writing back
+  // is held until it has been applied. The page writes the address bar as you
+  // move and loads the grid asynchronously: whichever happened first won, so a
+  // link opened on a slow connection could be overwritten by the opening shot
+  // and silently ignored.
+  var INITIAL_HASH = location.hash;
+  var hashReady = false;
+  var lastHashStr = "", lastHashAt = 0;
+  function markHash(force) {
+    if (!hashReady) { return; }
+    var now = performance.now();
+    if (!force && now - lastHashAt < 700) { return; }
+    var h = hashNow();
+    if (h === lastHashStr) { return; }
+    lastHashStr = h; lastHashAt = now;
+    try { history.replaceState(null, "", h); } catch (e) { /* file:// refuses */ }
+  }
+  function applyHash(h) {
+    var q = {}, parts = String(h || "").replace(/^#/, "").split("&"), i, kv;
+    for (i = 0; i < parts.length; i++) {
+      kv = parts[i].split("=");
+      if (kv.length === 2) { q[kv[0]] = parseFloat(kv[1]); }
+    }
+    if (!isFinite(q.x) || !isFinite(q.y)) { return false; }
+    stopAssist();
+    setMode(q.fly ? "fly" : "walk");
+    if (isFinite(q.h)) { setHeight(q.h); }
+    state.x = q.x; state.y = q.y;
+    if (isFinite(q.a)) { state.yaw = q.a; }
+    if (isFinite(q.p)) { state.pitch = q.p; }
+    if (isFinite(q.z)) {
+      // The author's exact frame wins. Settling onto the measured floor instead
+      // reopened the shot up to 10 cm off, which is a different frame on a long
+      // lens. The ground is taken from the link so the next step still walks
+      // from somewhere sensible.
+      state.z = q.z;
+      state.g = q.z - state.h;
+    } else {
+      settleFrom(state.z - state.h);
+    }
+    if (isFinite(q.mm)) { setLens(q.mm); }
+    return true;
+  }
+  function copyText(text, btn, label) {
+    function done(ok) {
+      var was = btn.textContent;
+      btn.textContent = ok ? "Copied" : "Press Ctrl+C";
+      setTimeout(function () { btn.textContent = label || was; }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      // Clipboard access can be refused outright; a selected textarea still lets
+      // the viewer copy it by hand rather than losing the link.
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;left:8px;bottom:8px;width:40ch;height:4em;z-index:9";
+      document.body.appendChild(ta); ta.select();
+      done(false);
+      setTimeout(function () { ta.remove(); }, 8000);
+    }
+  }
+
+  // ---- shot list ----
+  // Marked shots live in this browser only (localStorage), which is why Link,
+  // Sheet and List exist: the page cannot hand the list to anyone by itself.
+  var SHOT_KEY = "pn-shots:" + location.pathname;
+  var shots = [];
+  try { shots = JSON.parse(localStorage.getItem(SHOT_KEY) || "[]") || []; } catch (e) { shots = []; }
+  var shotsEl = document.getElementById("shots"), shotsEmpty = document.getElementById("shots-empty"),
+      shotCount = document.getElementById("shot-n");
+
+  function saveShots() {
+    try { localStorage.setItem(SHOT_KEY, JSON.stringify(shots)); return true; }
+    catch (e) { return false; }
+  }
+  function thumbURL(width) {
+    var w = width || 480, h = Math.max(1, Math.round(w * canvas.height / canvas.width));
+    var c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    c.getContext("2d").drawImage(canvas, 0, 0, w, h);
+    return c.toDataURL("image/jpeg", 0.62);
+  }
+  function nearestRoom() {
+    var best = "", bd = 7.0;
+    for (var i = 0; i < ROOMS.points.length; i++) {
+      var p = ROOMS.points[i];
+      if (Math.abs(p.z - state.z) > 1.8) { continue; }
+      var d = Math.hypot(p.x - state.x, p.y - state.y);
+      if (d < bd) { bd = d; best = p.name || ""; }
+    }
+    return best;
+  }
+  function addShot() {
+    var s = { x: state.x, y: state.y, z: state.z, yaw: state.yaw, pitch: state.pitch,
+              mm: currentMM, h: state.h, room: nearestRoom(),
+              hdg: Math.round(((-state.yaw % 360) + 360) % 360),
+              storey: floorAt(state.z).n, img: thumbURL(480) };
+    shots.push(s);
+    if (!saveShots()) {
+      // Out of browser storage: keep the shot, drop the oldest pictures rather
+      // than the shots themselves.
+      for (var i = 0; i < shots.length - 1 && !saveShots(); i++) { delete shots[i].img; }
+    }
+    renderShots();
+    document.querySelector('[data-chart="shots"]').click();
+  }
+  function applyShot(s) {
+    stopAssist();
+    setMode("fly");                   // restore the frame exactly, height included
+    state.x = s.x; state.y = s.y; state.z = s.z;
+    state.yaw = s.yaw; state.pitch = s.pitch;
+    setHeight(s.h); setLens(s.mm);
+    setMode("walk");
+    state.z = s.z;                    // walk mode would otherwise resettle it
+    canvas.focus(); markHash();
+  }
+  function renderShots() {
+    shotsEl.innerHTML = "";
+    shots.forEach(function (s, i) {
+      var wrap = document.createElement("div");
+      wrap.className = "shot";
+      var b = document.createElement("button");
+      b.className = "room"; b.type = "button";
+      b.innerHTML = (s.img ? '<img src="' + s.img + '" alt="">'
+                           : '<img alt="" style="visibility:hidden">') +
+                    '<span>' + (s.room || s.storey || "Shot") +
+                    '<i>' + s.mm + "mm</i></span>";
+      b.title = "Shot " + (i + 1) + " · " + s.mm + " mm · " + s.h.toFixed(2) +
+                " m · " + s.hdg + "°" + (s.room ? " · " + s.room : "");
+      b.addEventListener("click", function () { applyShot(s); });
+      var x = document.createElement("button");
+      x.className = "x"; x.type = "button"; x.textContent = "x";
+      x.setAttribute("aria-label", "Remove shot " + (i + 1));
+      x.addEventListener("click", function (e) {
+        e.stopPropagation();
+        shots.splice(i, 1); saveShots(); renderShots();
+      });
+      wrap.appendChild(b); wrap.appendChild(x);
+      shotsEl.appendChild(wrap);
+    });
+    shotCount.textContent = shots.length ? " " + shots.length : "";
+    shotsEmpty.hidden = shotsEl.hidden || shots.length > 0;
+  }
+
+  // A contact sheet is the thing that actually leaves the browser: thumbnail,
+  // number, lens, height and room, laid out to print.
+  function exportSheet() {
+    if (!shots.length) { addShot(); return; }
+    var cols = Math.min(3, shots.length), tw = 480, th = Math.round(tw * 9 / 16);
+    var cap = 54, pad = 18, head = 76;
+    var rows = Math.ceil(shots.length / cols);
+    var out = document.createElement("canvas");
+    out.width = pad + cols * (tw + pad);
+    out.height = head + rows * (th + cap + pad) + pad;
+    var g = out.getContext("2d");
+    g.fillStyle = "#0e0f12"; g.fillRect(0, 0, out.width, out.height);
+    g.fillStyle = "#eceef2";
+    g.font = "600 28px 'IBM Plex Sans Condensed', system-ui, sans-serif";
+    g.textBaseline = "alphabetic";
+    g.fillText(TITLE.toUpperCase() + " — SHOT LIST", pad, 40);
+    g.fillStyle = "#8b90a0";
+    g.font = "400 15px 'IBM Plex Mono', monospace";
+    g.fillText(shots.length + " shots · Super 35 · " + new Date().toISOString().slice(0, 10), pad, 62);
+
+    var pending = 0, done = false;
+    function finish() {
+      if (!done && pending === 0) {
+        done = true;
+        out.toBlob(function (blob) {
+          if (!blob) { return; }
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = slug(TITLE) + "_shotlist.png";
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        }, "image/png");
+      }
+    }
+    shots.forEach(function (s, i) {
+      var cx = pad + (i % cols) * (tw + pad), cy = head + Math.floor(i / cols) * (th + cap + pad);
+      g.fillStyle = "#05060a"; g.fillRect(cx, cy, tw, th);
+      g.fillStyle = "#eceef2";
+      g.font = "500 17px 'IBM Plex Sans Condensed', system-ui, sans-serif";
+      g.fillText(String(i + 1) + ".  " + (s.room || s.storey || "—"), cx, cy + th + 22);
+      g.fillStyle = "#8b90a0";
+      g.font = "400 13px 'IBM Plex Mono', monospace";
+      g.fillText(s.mm + " mm · h " + s.h.toFixed(2) + " m · " + s.hdg + "° · " +
+                 s.x.toFixed(1) + ", " + s.y.toFixed(1) + " m", cx, cy + th + 42);
+      if (s.img) {
+        pending++;
+        var im = new Image();
+        im.onload = function () { g.drawImage(im, cx, cy, tw, th); pending--; finish(); };
+        im.onerror = function () { pending--; finish(); };
+        im.src = s.img;
+      }
+    });
+    finish();
+  }
+
+  document.getElementById("shot-add").addEventListener("click", addShot);
+  document.getElementById("shot-link").addEventListener("click", function () {
+    copyText(location.origin + location.pathname + hashNow(), this, "Link");
+  });
+  document.getElementById("shot-sheet").addEventListener("click", exportSheet);
+  document.getElementById("shot-list").addEventListener("click", function () {
+    var lines = shots.map(function (s, i) {
+      return (i + 1) + ". " + (s.room || s.storey || "—") + " — " + s.mm + " mm, " +
+             s.h.toFixed(2) + " m, " + s.hdg + "°\n   " + linkFor(s);
+    });
+    copyText(TITLE + " — shot list\n\n" + (lines.join("\n") || "(none marked)"), this, "List");
+  });
+  renderShots();
+
   // ---- frame ----
   var roPos = document.getElementById("ro-pos"), roH = document.getElementById("ro-h"),
       roHdg = document.getElementById("ro-hdg"), roStorey = document.getElementById("ro-storey");
@@ -1007,11 +1597,9 @@
     if (f || r || u) { stopAssist(); move(f * speed, r * speed, u * speed); }
     if (held.turnL || held.turnR) {
       state.yaw += (held.turnL ? 1 : -1) * 70 * dt;
-      lastLook = performance.now();
     }
     if (held.lookU || held.lookD) {
       state.pitch = pc.math.clamp(state.pitch + (held.lookU ? 1 : -1) * 48 * dt, -89, 89);
-      lastLook = performance.now();
     }
     stepAssist(dt);
 
@@ -1024,23 +1612,67 @@
     hudTimer += dt;
     if (hudTimer > 0.1) {
       hudTimer = 0;
-      var storey = floorAt(state.z);
+      var storey = floorAt(state.g + EYE);
       var hdg = ((-state.yaw % 360) + 360) % 360;
       roPos.textContent = state.x.toFixed(1) + ", " + state.y.toFixed(1) + " m";
-      roH.textContent = (state.z - storey.z).toFixed(2) + " m";
+      roH.textContent = (state.mode === "fly" ? (state.z - storey.z) : state.h).toFixed(2) + " m";
       roHdg.textContent = String(Math.round(hdg)).padStart(3, "0") + "°";
       roStorey.textContent = storey.n;
+      markHash();
       if (!planEl.hasAttribute("hidden")) { drawPlan(); }
     }
   });
 
   VIEWS[Object.keys(VIEWS)[0]]();
+  settleFrom(state.z - state.h);
+
+  // The walkable surface, then the link. Both are optional and the page must
+  // stand up without either: a published site from before this change has no
+  // nav.json, and a fetch can simply fail.
+  var wallsSeg = document.getElementById("walls-seg");
+  wallsSeg.hidden = true;
+  fetch("nav.json", { cache: "force-cache" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.n || !d.z) { return; }
+      NAV = navIndex(d);
+      wallsSeg.hidden = false;
+      if (state.mode === "walk") { settleFrom(state.z - state.h); }
+    })
+    .catch(function () { /* no grid: straight-line walking, flat storeys */ })
+    .then(function () {
+      if (INITIAL_HASH) { applyHash(INITIAL_HASH); }
+      hashReady = true;
+    });
+
+  window.addEventListener("hashchange", function () {
+    if (location.hash !== lastHashStr) { applyHash(location.hash); }
+  });
+
   (function () {
     var f = floorAt(state.z), yaw = state.yaw * pc.math.DEG_TO_RAD;
     var p = FIGURE_AT || { x: state.x - Math.sin(yaw) * 2.5, y: state.y + Math.cos(yaw) * 2.5 };
     figure.setPosition(p.x, f.z, -p.y);
     figure.setEulerAngles(0, facingViewer(p.x, p.y), 0);
   })();
+  // A read-only handle for the verification harness (tools/verify_nav.mjs). The
+  // claims worth checking -- she can reach the upper floor, she cannot walk
+  // through a wall -- are about the page's own movement and grid, and a check
+  // that infers them from pixels is a check that passes when it should not.
+  // Nothing in the page reads this.
+  window.__scout = {
+    state: state,
+    route: route,
+    walkTo: walkTo,
+    groundNear: groundNear,
+    nav: function () { return NAV; },
+    shots: function () { return shots; },
+    stop: stopAssist,
+    settleFrom: settleFrom,
+    rooms: ROOMS,
+    floors: FLOORS
+  };
+
   app.start();
   canvas.focus();
 })();
